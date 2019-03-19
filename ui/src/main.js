@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
+import store from './store'
 import api from './api'
 import messages from './messages'
 import styles from './styles'
@@ -22,5 +23,6 @@ Vue.prototype.$styles = styles
 
 new Vue({
   router,
+  store,
   render: h => h(App)
 }).$mount('#app')

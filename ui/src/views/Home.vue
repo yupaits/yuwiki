@@ -18,7 +18,7 @@
               新建 <a-icon type="down"/>
             </a-button>
           </a-dropdown>
-          <a-dropdown>
+          <a-dropdown placement="bottomRight">
             <a-menu slot="overlay" @click="handleUserOpt">
               <a-menu-item key="share-book"><a-icon type="share-alt"/>共享笔记本</a-menu-item>
               <a-menu-item key="modify-passwd"><a-icon type="key"/>修改密码</a-menu-item>
@@ -26,7 +26,7 @@
             </a-menu>
             <span class="user-holder ml-1">
               <a-avatar size="small" shape="square" icon="user" src="https://avatars1.githubusercontent.com/u/12194490?s=40&v=4"></a-avatar>
-              <span class="ml-1">用户</span> <a-icon type="down"/>
+              <span class="ml-1">yupaits</span> <a-icon type="down"/>
             </span>
           </a-dropdown>
         </span>
@@ -38,30 +38,25 @@
               <h3 class="text-title text-bold holder-header">
                 <a-icon type="book"/> 笔记本
                 <a-button size="small" icon="sync" class="ml-1" @click="fetchBooks"></a-button>
-                <span class="pull-right">
-                <!-- <span class="pull-right" v-if="bookId"> -->
+                <span class="pull-right" v-if="bookId">
                   <a-button size="small" icon="edit" class="mr-1" @click="editBook"></a-button>
                   <a-popconfirm title="确定删除此笔记本吗？" placement="right" @confirm="handleDeleteBook">
                     <a-button size="small" icon="delete"></a-button>
                   </a-popconfirm>
                 </span>
               </h3>
-              <div class="list">
+              <a-spin :spinning="loading.books" class="list">
                 <div v-for="book in books" :key="book.id" class="book-item" :class="{'active': bookId === book.id}" @click="selectBook(book.id)">
                   <span :style="{color: book.color}"><a-icon type="book"/></span> {{book.name}}
                 </div>
-                <div v-for="i in 10" :key="i" class="book-item" :class="{'active': bookId === i}" @click="selectBook(i)">
-                  <span :style="{color: 'green'}"><a-icon type="book"/></span> 系列第{{i}}部
-                </div>
-              </div>
+              </a-spin>
             </div>
           </a-col>
           <a-col :span="4">
             <div class="holder">
               <h3 class="text-title text-bold holder-header">
                 <a-icon type="folder"/> 分区
-                <span>
-                <!-- <span v-if="partId"> -->
+                <span v-if="partId">
                   <a-button size="small" icon="sync" class="ml-1" @click="fetchParts"></a-button>
                   <span class="pull-right">
                     <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
@@ -77,8 +72,7 @@
             <div class="holder">
               <h3 class="text-title text-bold holder-header">
                 <a-icon type="file-text"/> 页面
-                <span>
-                <!-- <span v-if="pageId"> -->
+                <span v-if="pageId">
                   <a-button size="small" icon="sync" class="ml-1" @click="fetchParts"></a-button>
                   <span class="pull-right">
                     <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
@@ -101,11 +95,11 @@
       </a-layout-footer>
     </a-layout>
 
-    <a-modal :visible.sync="modal.visible" @cancel="modal.visible = false" @ok="modal.ok">
+    <a-modal :visible.sync="modal.visible" @cancel="handleClose" @ok="modal.ok">
       <template slot="title">
         <a-icon :type="modalType[modal.type] ? modalType[modal.type].icon : 'question'"/> {{modalTitle}}
       </template>
-      <component :is="form" :record="record"></component>
+      <component :is="form"></component>
     </a-modal>
   </div>
 </template>
@@ -122,15 +116,12 @@ export default {
   },
   data() {
     return {
-      books: [],
+      books: [{id: 1, name: '读后感'}],
       parts: [],
       pages: [],
       bookId: undefined,
       partId: undefined,
       pageId: undefined,
-      book: {},
-      part: {},
-      page: {},
       viewedPage: {},
       loading: {
         books: false,
@@ -179,21 +170,6 @@ export default {
     },
     form() {
       return this.forms[this.modal.key];
-    },
-    record() {
-      let record = {};
-      switch(this.modal.key) {
-        case 'book':
-          record = this.book;
-          break;
-        case 'part':
-          record = this.part;
-          break;
-        case 'page':
-          record = this.page;
-          break;
-      }
-      return record;
     }
   },
   created() {
@@ -248,25 +224,31 @@ export default {
       };
     },
     handleCreate({key}) {
+      this.$store.dispatch('setRecord', {});
       this.showModal('create', key);
+    },
+    handleClose() {
+      this.modal.visible = false;
     },
     selectBook(bookId) {
       this.bookId = bookId;
       this.partId = undefined;
       this.pageId = undefined;
       this.viewedPage = {};
+      this.fetchParts();
     },
     selectPart(partId) {
       this.partId = partId;
       this.pageId = undefined;
       this.viewedPage = {};
+      this.fetchPages();
     },
     selectPage(pageId) {
       this.pageId = pageId;
       this.viewPage();
     },
     editBook() {
-      this.book = JSON.parse(JSON.stringify(this.selectedBook));
+      this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.selectedBook)));
       this.modal = {
         type: 'modify',
         key: 'book',
@@ -275,7 +257,7 @@ export default {
       };
     },
     editPart() {
-      this.part = JSON.parse(JSON.stringify(this.selectedPart));
+      this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.selectedPart)));
       this.modal = {
         type: 'modify',
         key: 'part',
@@ -284,40 +266,40 @@ export default {
       };
     },
     editPage() {
-      this.page = JSON.parse(JSON.stringify(this.viewedPage));
+      this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.viewedPage)));
     },
     handleAddBook() {
-      this.$api.addBook(this.book).then(res => {
+      this.$api.addBook(this.$store.getters.record).then(res => {
         this.$message.success(this.$messages.createSuccess);
         this.fetchBooks();
       });
     },
     handleAddPart() {
-      this.$api.addPart(this.part).then(res => {
+      this.$api.addPart(this.$store.getters.record).then(res => {
         this.$message.success(this.$messages.createSuccess);
         this.fetchParts();
       });
     },
     handleAddPage() {
-      this.$api.addPage(this.page).then(res => {
+      this.$api.addPage(this.$store.getters.record).then(res => {
         this.$message.success(this.$messages.createSuccess);
         this.fetchPages();
       });
     },
     handleEditBook() {
-      this.$api.editBook(this.book).then(res => {
+      this.$api.editBook(this.$store.getters.record).then(res => {
         this.$message.success(this.$messages.updateSuccess);
         this.fetchBooks();
       });
     },
     handleEditPart() {
-      this.$api.editPart(this.book).then(res => {
+      this.$api.editPart(this.$store.getters.record).then(res => {
         this.$message.success(this.$messages.updateSuccess);
         this.fetchParts();
       });
     },
     handleEditPage() {
-      this.$api.editPage(this.book).then(res => {
+      this.$api.editPage(this.$store.getters.record).then(res => {
         this.$message.success(this.$messages.updateSuccess);
         this.fetchPages();
       });
