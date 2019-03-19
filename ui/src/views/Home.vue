@@ -35,7 +35,7 @@
         <a-row :gutter="16">
           <a-col :span="4">
             <div class="holder">
-              <h3 class="text-primary text-bold holder-header">
+              <h3 class="text-title text-bold holder-header">
                 <a-icon type="book"/> 笔记本
                 <a-button size="small" icon="sync" class="ml-1" @click="fetchBooks"></a-button>
                 <span class="pull-right">
@@ -48,14 +48,17 @@
               </h3>
               <div class="list">
                 <div v-for="book in books" :key="book.id" class="book-item" :class="{'active': bookId === book.id}" @click="selectBook(book.id)">
-                  <a-icon type="book"/> 第{{i}}本书
+                  <span :style="{color: book.color}"><a-icon type="book"/></span> {{book.name}}
+                </div>
+                <div v-for="i in 10" :key="i" class="book-item" :class="{'active': bookId === i}" @click="selectBook(i)">
+                  <span :style="{color: 'green'}"><a-icon type="book"/></span> 系列第{{i}}部
                 </div>
               </div>
             </div>
           </a-col>
           <a-col :span="4">
             <div class="holder">
-              <h3 class="text-primary text-bold">
+              <h3 class="text-title text-bold holder-header">
                 <a-icon type="folder"/> 分区
                 <span>
                 <!-- <span v-if="partId"> -->
@@ -72,7 +75,7 @@
           </a-col>
           <a-col :span="6">
             <div class="holder">
-              <h3 class="text-primary text-bold">
+              <h3 class="text-title text-bold holder-header">
                 <a-icon type="file-text"/> 页面
                 <span>
                 <!-- <span v-if="pageId"> -->
@@ -102,7 +105,7 @@
       <template slot="title">
         <a-icon :type="modalType[modal.type] ? modalType[modal.type].icon : 'question'"/> {{modalTitle}}
       </template>
-      <component :is="form"></component>
+      <component :is="form" :record="record"></component>
     </a-modal>
   </div>
 </template>
@@ -176,6 +179,21 @@ export default {
     },
     form() {
       return this.forms[this.modal.key];
+    },
+    record() {
+      let record = {};
+      switch(this.modal.key) {
+        case 'book':
+          record = this.book;
+          break;
+        case 'part':
+          record = this.part;
+          break;
+        case 'page':
+          record = this.page;
+          break;
+      }
+      return record;
     }
   },
   created() {
@@ -391,5 +409,7 @@ export default {
 }
 .book-item.active,.part-item.active,.page-item.active {
   background: #91d5ff;
+  font-weight: bold;
+  color: #262626;
 }
 </style>
