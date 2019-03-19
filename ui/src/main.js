@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
+import api from './api'
+import messages from './messages'
 import Antd from 'ant-design-vue'
 import MavonEditor from 'mavon-editor'
 
@@ -12,6 +14,9 @@ Vue.config.productionTip = false
 
 Vue.use(Antd)
 Vue.use(MavonEditor)
+
+Vue.prototype.$api = api
+Vue.prototype.$messages = messages
 
 new Vue({
   router,

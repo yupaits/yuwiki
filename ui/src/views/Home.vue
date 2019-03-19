@@ -7,13 +7,14 @@
           <span class="ml-1">知识库</span>
         </span>
         <span class="pull-right">
+          <a-input-search class="search-input"></a-input-search>
           <a-dropdown>
             <a-menu slot="overlay" @click="handleCreate">
               <a-menu-item key="book"><a-icon type="book"/>笔记本</a-menu-item>
               <a-menu-item key="part"><a-icon type="folder"/>分区</a-menu-item>
               <a-menu-item key="page"><a-icon type="file-text"/>页面</a-menu-item>
             </a-menu>
-            <a-button size="large" icon="plus" class="ml-1">
+            <a-button icon="plus" class="ml-1">
               新建 <a-icon type="down"/>
             </a-button>
           </a-dropdown>
@@ -23,20 +24,22 @@
               <a-menu-item key="modify-passwd"><a-icon type="key"/>修改密码</a-menu-item>
               <a-menu-item key="logout"><a-icon type="logout"/>注销登录</a-menu-item>
             </a-menu>
-            <a-button size="large" class="ml-1">
+            <span class="user-holder ml-1">
               <a-avatar size="small" shape="square" icon="user" src="https://avatars1.githubusercontent.com/u/12194490?s=40&v=4"></a-avatar>
               <span class="ml-1">用户</span> <a-icon type="down"/>
-            </a-button>
+            </span>
           </a-dropdown>
         </span>
       </a-layout-header>
       <a-layout-content class="layout-content">
         <a-row :gutter="16">
-          <a-col :span="3">
+          <a-col :span="4">
             <div class="holder">
               <h3 class="text-primary text-bold holder-header">
                 <a-icon type="book"/> 笔记本
-                <span class="pull-right" v-if="bookId">
+                <a-button size="small" icon="sync" class="ml-1" @click="fetchBooks"></a-button>
+                <span class="pull-right">
+                <!-- <span class="pull-right" v-if="bookId"> -->
                   <a-button size="small" icon="edit" class="mr-1" @click="editBook"></a-button>
                   <a-popconfirm title="确定删除此笔记本吗？" placement="right" @confirm="handleDeleteBook">
                     <a-button size="small" icon="delete"></a-button>
@@ -44,7 +47,7 @@
                 </span>
               </h3>
               <div class="list">
-                <div v-for="i in 10" :key="i" class="book-item" :class="{'active': bookId === i}" @click="selectBook(i)">
+                <div v-for="book in books" :key="book.id" class="book-item" :class="{'active': bookId === book.id}" @click="selectBook(book.id)">
                   <a-icon type="book"/> 第{{i}}本书
                 </div>
               </div>
@@ -52,15 +55,39 @@
           </a-col>
           <a-col :span="4">
             <div class="holder">
-              <h3 class="text-primary text-bold"><a-icon type="folder"/> 分区</h3>
+              <h3 class="text-primary text-bold">
+                <a-icon type="folder"/> 分区
+                <span>
+                <!-- <span v-if="partId"> -->
+                  <a-button size="small" icon="sync" class="ml-1" @click="fetchParts"></a-button>
+                  <span class="pull-right">
+                    <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
+                    <a-popconfirm title="确定删除此分区吗？" placement="right" @confirm="handleDeletePart">
+                      <a-button size="small" icon="delete"></a-button>
+                    </a-popconfirm>
+                  </span>
+                </span>
+              </h3>
             </div>
           </a-col>
           <a-col :span="6">
             <div class="holder">
-              <h3 class="text-primary text-bold"><a-icon type="file-text"/> 页面</h3>
+              <h3 class="text-primary text-bold">
+                <a-icon type="file-text"/> 页面
+                <span>
+                <!-- <span v-if="pageId"> -->
+                  <a-button size="small" icon="sync" class="ml-1" @click="fetchParts"></a-button>
+                  <span class="pull-right">
+                    <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
+                    <a-popconfirm title="确定删除此分区吗？" placement="right" @confirm="handleDeletePart">
+                      <a-button size="small" icon="delete"></a-button>
+                    </a-popconfirm>
+                  </span>
+                </span>
+              </h3>
             </div>
           </a-col>
-          <a-col :span="11">
+          <a-col :span="10">
             <div class="holder">
             </div>
           </a-col>
@@ -71,17 +98,25 @@
       </a-layout-footer>
     </a-layout>
 
-    <a-modal :visible.sync="modal.visible" 
-             @cancel="modal.visible = false">
+    <a-modal :visible.sync="modal.visible" @cancel="modal.visible = false" @ok="modal.ok">
       <template slot="title">
         <a-icon :type="modalType[modal.type] ? modalType[modal.type].icon : 'question'"/> {{modalTitle}}
       </template>
+      <component :is="form"></component>
     </a-modal>
   </div>
 </template>
 
 <script>
+import BookForm from '../components/form/BookForm'
+import PartForm from '../components/form/PartForm'
+import PageForm from '../components/form/PageForm'
+import ModifyPasswordForm from '../components/form/ModifyPasswordForm'
+import PageEditor from '../components/PageEditor'
 export default {
+  components: {
+    PageEditor
+  },
   data() {
     return {
       books: [],
@@ -93,11 +128,19 @@ export default {
       book: {},
       part: {},
       page: {},
+      viewedPage: {},
+      loading: {
+        books: false,
+        parts: false,
+        pages: false,
+        pageView: false
+      },
       modalVisible: false,
       modal: {
         type: undefined,
         key: undefined,
-        visible: false
+        visible: false,
+        ok: () => {}
       },
       modalType: {
         create: {label: '新建', icon: 'plus'},
@@ -108,6 +151,16 @@ export default {
         part: '分区',
         page: '页面',
       },
+      createHandlers: {
+        book: this.handleAddBook,
+        part: this.handleAddPart,
+        page: this.handleAddPage,
+      },
+      forms: {
+        book: BookForm,
+        part: PartForm,
+        page: PageForm,
+      }
     }
   },
   computed: {
@@ -117,37 +170,160 @@ export default {
     },
     selectedBook() {
       return this.books.filter(book => book.id === this.bookId)[0] || {};
+    },
+    selectedPart() {
+      return this.parts.filter(part => part.id === this.partId)[0] || {};
+    },
+    form() {
+      return this.forms[this.modal.key];
     }
+  },
+  created() {
+    this.fetchBooks();
   },
   methods: {
     fetchBooks() {
-
+      this.loading.books = true;
+      this.$api.getBooks().then(res => {
+        this.books = res.data;
+        this.loading.books = false;
+      }).catch(() => {
+        this.loading.books = false;
+      });
+    },
+    fetchParts() {
+      this.loading.parts = true;
+      this.$api.getParts(this.bookId).then(res => {
+        this.parts = res.data;
+        this.loading.parts = false;
+      }).catch(() => {
+        this.loading.parts = false;
+      });
+    },
+    fetchPages() {
+      this.loading.pages = true;
+      this.$api.getPages(this.partId).then(res => {
+        this.pages = res.data;
+        this.loading.pages = false;
+      }).catch(() => {
+        this.loading.pages = false;
+      });
+    },
+    viewPage() {
+      this.loading.pageView = true;
+      this.$api.viewPage(this.pageId).then(res => {
+        this.viewedPage = res.data;
+        this.loading.pageView = false;
+      }).catch(() => {
+        this.loading.pageView = false;
+      });
+    },
+    handleUserOpt({key}) {
+      alert(key);
     },
     showModal(type, key) {
       this.modal = {
         type: type,
         key: key,
-        visible: true
+        visible: true,
+        ok: this.createHandlers[key]
       };
     },
     handleCreate({key}) {
       this.showModal('create', key);
     },
-    selectBook(i) {
-      this.bookId = i;
+    selectBook(bookId) {
+      this.bookId = bookId;
       this.partId = undefined;
       this.pageId = undefined;
+      this.viewedPage = {};
+    },
+    selectPart(partId) {
+      this.partId = partId;
+      this.pageId = undefined;
+      this.viewedPage = {};
+    },
+    selectPage(pageId) {
+      this.pageId = pageId;
+      this.viewPage();
     },
     editBook() {
       this.book = JSON.parse(JSON.stringify(this.selectedBook));
       this.modal = {
         type: 'modify',
         key: 'book',
-        visible: true
+        visible: true,
+        ok: this.handleEditBook
       };
     },
+    editPart() {
+      this.part = JSON.parse(JSON.stringify(this.selectedPart));
+      this.modal = {
+        type: 'modify',
+        key: 'part',
+        visible: true,
+        ok: this.handleEditPart
+      };
+    },
+    editPage() {
+      this.page = JSON.parse(JSON.stringify(this.viewedPage));
+    },
+    handleAddBook() {
+      this.$api.addBook(this.book).then(res => {
+        this.$message.success(this.$messages.createSuccess);
+        this.fetchBooks();
+      });
+    },
+    handleAddPart() {
+      this.$api.addPart(this.part).then(res => {
+        this.$message.success(this.$messages.createSuccess);
+        this.fetchParts();
+      });
+    },
+    handleAddPage() {
+      this.$api.addPage(this.page).then(res => {
+        this.$message.success(this.$messages.createSuccess);
+        this.fetchPages();
+      });
+    },
+    handleEditBook() {
+      this.$api.editBook(this.book).then(res => {
+        this.$message.success(this.$messages.updateSuccess);
+        this.fetchBooks();
+      });
+    },
+    handleEditPart() {
+      this.$api.editPart(this.book).then(res => {
+        this.$message.success(this.$messages.updateSuccess);
+        this.fetchParts();
+      });
+    },
+    handleEditPage() {
+      this.$api.editPage(this.book).then(res => {
+        this.$message.success(this.$messages.updateSuccess);
+        this.fetchPages();
+      });
+    },
     handleDeleteBook() {
-      alert('删除' + this.bookId);
+      this.$api.deleteBook(this.bookId).then(() => {
+        this.$message.success(this.$messages.deleteSuccess);
+        this.fetchBooks();
+        this.selectBook(undefined);
+      });
+    },
+    handleDeletePart() {
+      this.$api.deletePart(this.partId).then(() => {
+        this.$message.success(this.$messages.deleteSuccess);
+        this.fetchParts();
+        this.selectPart(undefined);
+      });
+    },
+    handleDeletePage() {
+      this.$api.deletePage(this.pageId).then(() => {
+        this.$message.success(this.$messages.deleteSuccess);
+        this.fetchPages();
+        this.selectPage(undefined);
+      });
     }
   }
 }
@@ -169,17 +345,28 @@ export default {
   border-radius: 10px;
   background-color: #bfbfbf;
 }
+.ant-layout-header {
+  background: #f0f2f5;
+}
 .logo {
-  color: #f5f5f5;
   font-size: 24px;
   line-height: 64px;
 }
+.search-input {
+  width: 320px;
+}
+.user-holder {
+  padding: 8px 16px;
+  border: 1px solid #f5f5f5;
+  border-radius: 4px;
+  background: #fff;
+}
 .layout-content {
   height: calc(100vh - 133px);
-  padding: 24px 50px;
+  padding: 0 50px;
 }
 .holder {
-  height: calc(100vh - 158px);
+  height: calc(100vh - 133px);
   padding: 8px 16px;
   border: 1px solid #f5f5f5;
   border-radius: 4px;
