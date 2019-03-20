@@ -116,7 +116,7 @@ export default {
   },
   data() {
     return {
-      books: [{id: 1, name: '读后感'}],
+      books: [],
       parts: [],
       pages: [],
       bookId: undefined,

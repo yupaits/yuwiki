@@ -11,7 +11,7 @@ export default {
     return client.get(`/parts/${partId}/pages`);
   },
   getStarItems() {
-    return client.get('/books/star');
+    return client.get('/star/items');
   },
   getSharedBooks() {
     return client.get('/books/shared');
@@ -53,7 +53,7 @@ export default {
     return client.post(`/books/share`, bookShare);
   },
   modifyPassword(passwordModify) {
-    return client.put('/user/modify-passwd', passwordModify);
+    return client.put('/user/modify-password', passwordModify);
   },
   siteSearch(query) {
     return client.post('/site/search', query);

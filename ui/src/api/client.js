@@ -13,7 +13,7 @@ client.interceptors.response.use(res => {
   if (res.data.success) {
     return Promise.resolve(res.data);
   }
-  message.error(res.data.message);
+  message.error(res.data.msg);
   return Promise.reject(res);
 }, error => {
   if (error.response === undefined || error.response === null) {
@@ -28,11 +28,11 @@ client.interceptors.response.use(res => {
     return Promise.reject(error);
   }
   if (error.response.data.code) {
-    message.error(`${error.response.data.code} - ${error.response.data.message}`);
+    message.error(`${error.response.data.code} - ${error.response.data.msg}`);
     return Promise.reject(error.response.data);
   }
   message.error(`${error} - ${error.response.statusText}`);
   return Promise.reject(error.response);
-});
+})
 
 export default client

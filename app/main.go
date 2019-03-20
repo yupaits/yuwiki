@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/YupaiTS/YuWiki"
+	"github.com/yupaits/yuwiki"
 )
 
 func main() {

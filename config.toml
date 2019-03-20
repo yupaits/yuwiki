@@ -1,0 +1,12 @@
+debug = false
+log_file = "/logs/yuwiki.log"
+
+[http]
+port = "8000"
+favicon = "./ui/dist/favicon.ico"
+static_path = "./ui/dist/static"
+html_path_pattern = "ui/dist/*.html"
+
+[dataSource]
+dialect = "sqlite3"
+url = "/db/yuwiki.db"
