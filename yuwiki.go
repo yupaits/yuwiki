@@ -1,7 +1,7 @@
 package yuwiki
 
 import (
-	"github.com/gin-gonic/gin v1.3.0"
+	"github.com/gin-gonic/gin"
 )
 
 func Run() {
