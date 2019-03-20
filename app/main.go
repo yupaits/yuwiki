@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/YupaiTS/YuWuki"
+	"github.com/YupaiTS/YuWiki"
 )
+
 func main() {
 	yuwiki.Run()
 }
