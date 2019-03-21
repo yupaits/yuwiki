@@ -74,3 +74,7 @@ func MsgFail(msg string) gin.H {
 func MsgFailData(msg string, data interface{}) gin.H {
 	return gin.H{"code": FAIL, "msg": msg, "success": false, "data": data}
 }
+
+func Result(c *gin.Context, res gin.H) {
+	c.JSON(http.StatusOK, res)
+}

@@ -10,3 +10,4 @@ html_path_pattern = "ui/dist/*.html"
 [dataSource]
 dialect = "sqlite3"
 url = "/db/yuwiki.db"
+ddl_update = true

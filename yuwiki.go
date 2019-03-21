@@ -25,6 +25,8 @@ func Run() {
 		gin.DefaultWriter = io.MultiWriter(os.Stdout)
 	}
 
+	InitDb(Config.DataSource.DdlUpdate)
+
 	r := gin.Default()
 
 	r.Static("/static", Config.Http.StaticPath)
@@ -41,28 +43,27 @@ func Run() {
 	books := r.Group("/books")
 	{
 		books.GET("", GetBooksHandler)
-		books.GET("/{bookId}/parts", GetBookPartsHandler)
-		books.GET("/shared", GetSharedBooksHandler)
-		books.POST("", AddBookHandler)
-		books.PUT("/{bookId}", EditBookHandler)
-		books.DELETE("/{bookId}", DeleteBookHandler)
+		books.GET("/:bookId/parts", GetBookPartsHandler)
+		books.POST("", SaveBookHandler)
+		books.PUT("/:bookId", SaveBookHandler)
+		books.DELETE("/:bookId", DeleteBookHandler)
 		books.POST("/share", ShareBookHandler)
 	}
 
 	parts := r.Group("/parts")
 	{
-		parts.GET("/{partId}/pages", GetPartPagesHandler)
-		parts.POST("", AddPartHandler)
-		parts.PUT("/{partId}", EditPartHandler)
-		parts.DELETE("/{partId}", DeletePartHandler)
+		parts.GET("/:partId/pages", GetPartPagesHandler)
+		parts.POST("", SavePartHandler)
+		parts.PUT("/:partId", SavePartHandler)
+		parts.DELETE("/:partId", DeletePartHandler)
 	}
 
 	pages := r.Group("/pages")
 	{
-		pages.GET("/{pageId}", GetPageHandler)
-		pages.POST("", AddPageHandler)
-		pages.PUT("/{pageId}", EditPageHandler)
-		pages.DELETE("/{pageId}", DeletePageHandler)
+		pages.GET("/:pageId", GetPageHandler)
+		pages.POST("", SavePageHandler)
+		pages.PUT("/:pageId", SavePageHandler)
+		pages.DELETE("/:pageId", DeletePageHandler)
 	}
 
 	user := r.Group("/user")
@@ -71,8 +72,9 @@ func Run() {
 		user.PUT("/modify-password", ModifyPasswordHandler)
 	}
 
+	r.GET("/shared/books", GetSharedBooksHandler)
 	r.GET("/star/items", GetStarItemsHandler)
 	r.POST("/site/search", SiteSearchHandler)
 
-	log.Fatalln(r.Run(":" + Config.Http.Port))
+	log.Fatal(r.Run(":" + Config.Http.Port))
 }

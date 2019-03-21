@@ -15,15 +15,16 @@ type AppConfig struct {
 		HtmlPathPattern string `toml:"html_path_pattern"`
 	} `toml:"http"`
 	DataSource struct {
-		Dialect string `toml:"dialect"`
-		Url     string `toml:"url"`
+		Dialect   string `toml:"dialect"`
+		Url       string `toml:"url"`
+		DdlUpdate bool   `toml:"ddl_update"`
 	} `toml:"dataSource"`
 }
 
 func InitConfig() *AppConfig {
 	var config *AppConfig
 	if _, err := toml.DecodeFile("./config.toml", &config); err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 	return config
 }
