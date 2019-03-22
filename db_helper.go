@@ -22,7 +22,7 @@ func DbConn() *gorm.DB {
 
 func setOwner(scope *gorm.Scope) {
 	if scope.HasColumn("Owner") {
-		err := scope.SetColumn("Owner", GetUserId)
+		err := scope.SetColumn("Owner", GetUserId())
 		if err != nil {
 			log.Fatal("设置所有者失败", err)
 		}

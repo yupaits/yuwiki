@@ -28,10 +28,10 @@ func getSharedBooksHandler(c *gin.Context) {
 }
 
 func saveBookHandler(c *gin.Context) {
-	book := Book{}
+	book := &Book{}
 	if err := c.ShouldBindJSON(book); err != nil {
 		Result(c, CodeFail(ParamsError))
-	} else if saveBook(&book) {
+	} else if saveBook(book) {
 		Result(c, Ok())
 	} else {
 		Result(c, CodeFail(CreateFail))
