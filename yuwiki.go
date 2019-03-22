@@ -42,39 +42,39 @@ func Run() {
 
 	books := r.Group("/books")
 	{
-		books.GET("", GetBooksHandler)
+		books.GET("", getBooksHandler)
 		books.GET("/:bookId/parts", GetBookPartsHandler)
-		books.POST("", SaveBookHandler)
-		books.PUT("/:bookId", SaveBookHandler)
-		books.DELETE("/:bookId", DeleteBookHandler)
-		books.POST("/share", ShareBookHandler)
+		books.POST("", saveBookHandler)
+		books.PUT("/:bookId", saveBookHandler)
+		books.DELETE("/:bookId", deleteBookHandler)
+		books.POST("/share", shareBookHandler)
 	}
 
 	parts := r.Group("/parts")
 	{
-		parts.GET("/:partId/pages", GetPartPagesHandler)
-		parts.POST("", SavePartHandler)
-		parts.PUT("/:partId", SavePartHandler)
-		parts.DELETE("/:partId", DeletePartHandler)
+		parts.GET("/:partId/pages", getPartPagesHandler)
+		parts.POST("", savePartHandler)
+		parts.PUT("/:partId", savePartHandler)
+		parts.DELETE("/:partId", deletePartHandler)
 	}
 
 	pages := r.Group("/pages")
 	{
-		pages.GET("/:pageId", GetPageHandler)
-		pages.POST("", SavePageHandler)
-		pages.PUT("/:pageId", SavePageHandler)
-		pages.DELETE("/:pageId", DeletePageHandler)
+		pages.GET("/:pageId", getPageHandler)
+		pages.POST("", savePageHandler)
+		pages.PUT("/:pageId", savePageHandler)
+		pages.DELETE("/:pageId", deletePageHandler)
 	}
 
 	user := r.Group("/user")
 	{
-		user.GET("", GetUserInfoHandler)
-		user.PUT("/modify-password", ModifyPasswordHandler)
+		user.GET("", getUserInfoHandler)
+		user.PUT("/modify-password", modifyPasswordHandler)
 	}
 
-	r.GET("/shared/books", GetSharedBooksHandler)
-	r.GET("/star/items", GetStarItemsHandler)
-	r.POST("/site/search", SiteSearchHandler)
+	r.GET("/shared/books", getSharedBooksHandler)
+	r.GET("/star/items", getStarItemsHandler)
+	r.POST("/site/search", siteSearchHandler)
 
 	log.Fatal(r.Run(":" + Config.Http.Port))
 }

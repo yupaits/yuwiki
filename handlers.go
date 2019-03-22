@@ -5,52 +5,58 @@ import (
 	"strconv"
 )
 
-func GetBooksHandler(c *gin.Context) {
-	Result(c, OkData(GetBooks()))
+type PasswordModify struct {
+	OldPassword     string `json:"oldPassword" binding:"required"`
+	NewPassword     string `json:"oldPassword" binding:"required"`
+	ConfirmPassword string `json:"oldPassword" binding:"required"`
+}
+
+func getBooksHandler(c *gin.Context) {
+	Result(c, OkData(getBooks()))
 }
 
 func GetBookPartsHandler(c *gin.Context) {
 	if bookId, err := strconv.ParseUint(c.Param("bookId"), 10, 32); err != nil {
 		Result(c, CodeFail(ParamsError))
 	} else {
-		Result(c, OkData(GetBookParts(uint(bookId))))
+		Result(c, OkData(getBookParts(uint(bookId))))
 	}
 }
 
-func GetSharedBooksHandler(c *gin.Context) {
+func getSharedBooksHandler(c *gin.Context) {
 
 }
 
-func SaveBookHandler(c *gin.Context) {
+func saveBookHandler(c *gin.Context) {
 	book := Book{}
 	if err := c.ShouldBindJSON(book); err != nil {
 		Result(c, CodeFail(ParamsError))
-	} else if SaveBook(&book) {
+	} else if saveBook(&book) {
 		Result(c, Ok())
 	} else {
 		Result(c, CodeFail(CreateFail))
 	}
 }
 
-func DeleteBookHandler(c *gin.Context) {
+func deleteBookHandler(c *gin.Context) {
 	if bookId, err := strconv.ParseUint(c.Param("bookId"), 10, 32); err != nil {
 		Result(c, CodeFail(ParamsError))
-	} else if DeleteBook(uint(bookId)) {
+	} else if deleteBook(uint(bookId)) {
 		Result(c, Ok())
 	} else {
 		Result(c, CodeFail(DeleteFail))
 	}
 }
 
-func ShareBookHandler(c *gin.Context) {
+func shareBookHandler(c *gin.Context) {
 
 }
 
-func GetPartPagesHandler(c *gin.Context) {
+func getPartPagesHandler(c *gin.Context) {
 
 }
 
-func SavePartHandler(c *gin.Context) {
+func savePartHandler(c *gin.Context) {
 	part := Part{}
 	if err := c.ShouldBind(part); err != nil {
 		Result(c, CodeFail(ParamsError))
@@ -60,41 +66,41 @@ func SavePartHandler(c *gin.Context) {
 		Result(c, CodeFail(ParamsError))
 		return
 	}
-	if SavePart(&part) {
+	if ok, err := savePart(&part); ok {
 		Result(c, Ok())
 	} else {
-		Result(c, CodeFail(CreateFail))
+		Result(c, MsgFail(err.Error()))
 	}
 }
 
-func DeletePartHandler(c *gin.Context) {
+func deletePartHandler(c *gin.Context) {
 
 }
 
-func GetPageHandler(c *gin.Context) {
+func getPageHandler(c *gin.Context) {
 
 }
 
-func SavePageHandler(c *gin.Context) {
+func savePageHandler(c *gin.Context) {
 
 }
 
-func DeletePageHandler(c *gin.Context) {
+func deletePageHandler(c *gin.Context) {
 
 }
 
-func GetUserInfoHandler(c *gin.Context) {
+func getUserInfoHandler(c *gin.Context) {
 
 }
 
-func ModifyPasswordHandler(c *gin.Context) {
+func modifyPasswordHandler(c *gin.Context) {
 
 }
 
-func GetStarItemsHandler(c *gin.Context) {
+func getStarItemsHandler(c *gin.Context) {
 
 }
 
-func SiteSearchHandler(c *gin.Context) {
+func siteSearchHandler(c *gin.Context) {
 
 }
