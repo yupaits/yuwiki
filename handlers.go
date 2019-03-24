@@ -34,7 +34,7 @@ func saveBookHandler(c *gin.Context) {
 	} else if saveBook(book) {
 		Result(c, Ok())
 	} else {
-		Result(c, CodeFail(CreateFail))
+		Result(c, CodeFail(SaveFail))
 	}
 }
 
@@ -57,7 +57,7 @@ func getPartPagesHandler(c *gin.Context) {
 }
 
 func savePartHandler(c *gin.Context) {
-	part := Part{}
+	part := &Part{}
 	if err := c.ShouldBind(part); err != nil {
 		Result(c, CodeFail(ParamsError))
 		return
@@ -66,7 +66,7 @@ func savePartHandler(c *gin.Context) {
 		Result(c, CodeFail(ParamsError))
 		return
 	}
-	if ok, err := savePart(&part); ok {
+	if ok, err := savePart(part); ok {
 		Result(c, Ok())
 	} else {
 		Result(c, MsgFail(err.Error()))

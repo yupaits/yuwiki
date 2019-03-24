@@ -70,6 +70,11 @@ type Tag struct {
 	Pages *[]Page `gorm:"many2many:page_tags"`
 }
 
+type TreePart struct {
+	Part     Part
+	SubParts *[]TreePart
+}
+
 func currentUser() (*User, error) {
 	userId := GetUserId()
 	user := &User{}
@@ -103,7 +108,7 @@ func SaveUser(user *User) bool {
 		user.InitPassword = ""
 		user.Password = ""
 		user.Salt = ""
-		err = Db.Updates(user).Error
+		err = Db.Model(user).Updates(user).Error
 	}
 	return err == nil
 }
@@ -146,7 +151,7 @@ func saveBook(book *Book) bool {
 	if Db.NewRecord(book) {
 		err = Db.Create(book).Error
 	} else {
-		err = Db.Updates(book).Error
+		err = Db.Model(book).Updates(book).Error
 	}
 	return err == nil
 }
@@ -162,17 +167,41 @@ func deleteBook(id uint) bool {
 	return err == nil
 }
 
-func getBookParts(bookId uint) *[]Part {
+func getBookParts(bookId uint) *[]TreePart {
 	parts := &[]Part{}
 	if err := Db.Where("book_id = ? AND parent_Id = 0", bookId).Find(parts).Error; err != nil {
 		log.Fatal(fmt.Sprintf("获取笔记本分区清单失败，bookId: %d", bookId), err)
 	}
+	var treeParts []TreePart
 	for _, part := range *parts {
 		if part.Protected && part.Password != "" {
 			part.Password = ""
 		}
+		treePart := TreePart{
+			Part:     part,
+			SubParts: getSubParts(part.ID),
+		}
+		treeParts = append(treeParts, treePart)
 	}
-	return parts
+	return &treeParts
+}
+
+func getSubParts(parentId uint) *[]TreePart {
+	parts := &[]Part{}
+	if err := Db.Where("parent_id = ?", parentId).Find(parts).Error; err != nil {
+		log.Fatal(fmt.Sprintf("获取笔记本分区子分区列表失败，parentId: %d", parentId), err)
+	}
+	var subParts []TreePart
+	for _, part := range *parts {
+		if part.Protected && part.Password != "" {
+			part.Password = ""
+		}
+		subParts = append(subParts, TreePart{
+			Part:     part,
+			SubParts: getSubParts(part.ID),
+		})
+	}
+	return &subParts
 }
 
 func savePart(part *Part) (bool, error) {
@@ -189,7 +218,7 @@ func savePart(part *Part) (bool, error) {
 	if Db.NewRecord(part) {
 		err = Db.Create(part).Error
 	} else {
-		err = Db.Updates(part).Error
+		err = Db.Model(part).Updates(part).Error
 	}
 	return err == nil, err
 }
@@ -229,7 +258,7 @@ func savePage(page *Page) bool {
 	if Db.NewRecord(page) {
 		err = Db.Create(page).Error
 	} else {
-		err = Db.Updates(page).Error
+		err = Db.Model(page).Updates(page).Error
 	}
 	return err == nil
 }

@@ -18,8 +18,11 @@ func Run() {
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	if Config.LogFile != "" {
-		logFile, _ := os.OpenFile(Config.LogFile, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+
+	existsDir := Mkdirs(Config.LogFile)
+	logFile, err := os.OpenFile(Config.LogFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.ModeAppend)
+	hasLogFile := existsDir && err == nil
+	if hasLogFile {
 		gin.DefaultWriter = io.MultiWriter(logFile, os.Stdout)
 	} else {
 		gin.DefaultWriter = io.MultiWriter(os.Stdout)

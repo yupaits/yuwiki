@@ -32,13 +32,13 @@ export default {
     return client.post('/pages', page);
   },
   editBook(book) {
-    return client.put(`/books/${book.id}`, book);
+    return client.put(`/books/${book.ID}`, book);
   },
   editPart(part) {
-    return client.put(`/parts/${part.id}`, part);
+    return client.put(`/parts/${part.ID}`, part);
   },
   editPage(page) {
-    return client.put(`/pages/${page.id}`, page);
+    return client.put(`/pages/${page.ID}`, page);
   },
   deleteBook(bookId) {
     return client.delete(`/books/${bookId}`);

@@ -25,7 +25,7 @@
               <a-menu-item key="logout"><a-icon type="logout"/>注销登录</a-menu-item>
             </a-menu>
             <span class="user-holder ml-1">
-              <a-avatar size="small" shape="square" icon="user" src="https://avatars1.githubusercontent.com/u/12194490?s=40&v=4"></a-avatar>
+              <a-avatar size="small" shape="square" icon="user"></a-avatar>
               <span class="ml-1">yupaits</span> <a-icon type="down"/>
             </span>
           </a-dropdown>
@@ -35,28 +35,28 @@
         <a-row :gutter="16">
           <a-col :span="4">
             <div class="holder">
-              <h3 class="text-title text-bold holder-header">
+              <h2 class="text-title text-bold holder-header">
                 <a-icon type="book"/> 笔记本
-                <a-button size="small" icon="sync" class="ml-1" @click="fetchBooks"></a-button>
-                <span class="pull-right" v-if="bookId">
+                <a-button size="small" icon="sync" @click="fetchBooks"></a-button>
+                <span class="pull-right" v-if="$store.getters.bookId">
                   <a-button size="small" icon="edit" class="mr-1" @click="editBook"></a-button>
                   <a-popconfirm title="确定删除此笔记本吗？" placement="right" @confirm="handleDeleteBook">
                     <a-button size="small" icon="delete"></a-button>
                   </a-popconfirm>
                 </span>
-              </h3>
+              </h2>
               <a-spin :spinning="loading.books" class="list">
-                <div v-for="book in books" :key="book.id" class="book-item" :class="{'active': bookId === book.id}" @click="selectBook(book.id)">
-                  <span :style="{color: book.color}"><a-icon type="book"/></span> {{book.name}}
+                <div v-for="book in books" :key="book.ID" class="book-item" :class="{'active': $store.getters.bookId === book.ID}" @click="selectBook(book.ID)">
+                  <span :style="{fontSize: '18px'}"><a-icon type="book" theme="twoTone" :twoToneColor="book.color"/> {{book.name}}</span>
                 </div>
               </a-spin>
             </div>
           </a-col>
           <a-col :span="4">
             <div class="holder">
-              <h3 class="text-title text-bold holder-header">
+              <h2 class="text-title text-bold holder-header">
                 <a-icon type="folder"/> 分区
-                <span v-if="partId">
+                <span v-if="$store.getters.partId">
                   <a-button size="small" icon="sync" class="ml-1" @click="fetchParts"></a-button>
                   <span class="pull-right">
                     <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
@@ -65,14 +65,17 @@
                     </a-popconfirm>
                   </span>
                 </span>
-              </h3>
+              </h2>
+              <a-spin :spinning="loading.parts" class="list">
+                  <a-directory-tree :treeData="partTree" @select="selectPart" @expand="onExpand"></a-directory-tree>
+              </a-spin>
             </div>
           </a-col>
           <a-col :span="6">
             <div class="holder">
-              <h3 class="text-title text-bold holder-header">
+              <h2 class="text-title text-bold holder-header">
                 <a-icon type="file-text"/> 页面
-                <span v-if="pageId">
+                <span v-if="$store.getters.pageId">
                   <a-button size="small" icon="sync" class="ml-1" @click="fetchParts"></a-button>
                   <span class="pull-right">
                     <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
@@ -81,7 +84,7 @@
                     </a-popconfirm>
                   </span>
                 </span>
-              </h3>
+              </h2>
             </div>
           </a-col>
           <a-col :span="10">
@@ -95,7 +98,7 @@
       </a-layout-footer>
     </a-layout>
 
-    <a-modal :visible.sync="modal.visible" @cancel="handleClose" @ok="modal.ok">
+    <a-modal :visible.sync="modal.visible" @cancel="closeModal" @ok="modal.ok">
       <template slot="title">
         <a-icon :type="modalType[modal.type] ? modalType[modal.type].icon : 'question'"/> {{modalTitle}}
       </template>
@@ -119,9 +122,6 @@ export default {
       books: [],
       parts: [],
       pages: [],
-      bookId: undefined,
-      partId: undefined,
-      pageId: undefined,
       viewedPage: {},
       loading: {
         books: false,
@@ -158,15 +158,29 @@ export default {
     }
   },
   computed: {
+    partTree() {
+      let tree = [];
+      if (this.parts && this.parts.length > 0) {
+        this.parts.forEach(part => {
+          tree.push({
+            title: part.name,
+            key: part.ID,
+            isLeaf: part.partType === 'PART',
+            icon: 'folder'
+          });
+        })
+      }
+      return tree;
+    },
     modalTitle() {
       const type = this.modalType[this.modal.type];
       return (type ? type.label : '') + this.title[this.modal.key];
     },
     selectedBook() {
-      return this.books.filter(book => book.id === this.bookId)[0] || {};
+      return this.books.filter(book => book.ID === this.bookId)[0] || {};
     },
     selectedPart() {
-      return this.parts.filter(part => part.id === this.partId)[0] || {};
+      return this.parts.filter(part => part.ID === this.partId)[0] || {};
     },
     form() {
       return this.forms[this.modal.key];
@@ -181,31 +195,34 @@ export default {
       this.$api.getBooks().then(res => {
         this.books = res.data;
         this.loading.books = false;
+        return Promise.resolve();
       }).catch(() => {
         this.loading.books = false;
       });
     },
     fetchParts() {
       this.loading.parts = true;
-      this.$api.getParts(this.bookId).then(res => {
+      this.$api.getParts(this.$store.getters.bookId).then(res => {
         this.parts = res.data;
         this.loading.parts = false;
+        return Promise.resovle();
       }).catch(() => {
         this.loading.parts = false;
       });
     },
     fetchPages() {
       this.loading.pages = true;
-      this.$api.getPages(this.partId).then(res => {
+      this.$api.getPages(this.$store.getters.partId).then(res => {
         this.pages = res.data;
         this.loading.pages = false;
+        return Promise.resolve();
       }).catch(() => {
         this.loading.pages = false;
       });
     },
     viewPage() {
       this.loading.pageView = true;
-      this.$api.viewPage(this.pageId).then(res => {
+      this.$api.viewPage(this.$store.getters.pageId).then(res => {
         this.viewedPage = res.data;
         this.loading.pageView = false;
       }).catch(() => {
@@ -227,24 +244,25 @@ export default {
       this.$store.dispatch('setRecord', {});
       this.showModal('create', key);
     },
-    handleClose() {
+    closeModal() {
       this.modal.visible = false;
     },
     selectBook(bookId) {
-      this.bookId = bookId;
-      this.partId = undefined;
-      this.pageId = undefined;
+      this.$store.dispatch('setBookId', bookId);
+      this.$store.dispatch('setPartId', undefined);
+      this.$store.dispatch('setPageId', undefined);
       this.viewedPage = {};
       this.fetchParts();
     },
     selectPart(partId) {
-      this.partId = partId;
-      this.pageId = undefined;
+      this.$store.dispatch('setPartId', partId);
+      this.$store.dispatch('setPageId', undefined);
       this.viewedPage = {};
       this.fetchPages();
     },
+    onExpand() {},
     selectPage(pageId) {
-      this.pageId = pageId;
+      this.$store.dispatch('setPageId', pageId);
       this.viewPage();
     },
     editBook() {
@@ -270,59 +288,68 @@ export default {
     },
     handleAddBook() {
       this.$api.addBook(this.$store.getters.record).then(res => {
-        this.$message.success(this.$messages.createSuccess);
+        this.$message.success(this.$messages.result.createSuccess);
         this.fetchBooks();
+        this.closeModal();
       });
     },
     handleAddPart() {
       this.$api.addPart(this.$store.getters.record).then(res => {
-        this.$message.success(this.$messages.createSuccess);
+        this.$message.success(this.$messages.result.createSuccess);
         this.fetchParts();
+        this.closeModal();
       });
     },
     handleAddPage() {
       this.$api.addPage(this.$store.getters.record).then(res => {
-        this.$message.success(this.$messages.createSuccess);
+        this.$message.success(this.$messages.result.createSuccess);
         this.fetchPages();
+        this.closeModal();
       });
     },
     handleEditBook() {
       this.$api.editBook(this.$store.getters.record).then(res => {
-        this.$message.success(this.$messages.updateSuccess);
+        this.$message.success(this.$messages.result.updateSuccess);
         this.fetchBooks();
+        this.closeModal();
       });
     },
     handleEditPart() {
       this.$api.editPart(this.$store.getters.record).then(res => {
-        this.$message.success(this.$messages.updateSuccess);
+        this.$message.success(this.$messages.result.updateSuccess);
         this.fetchParts();
+        this.closeModal();
       });
     },
     handleEditPage() {
       this.$api.editPage(this.$store.getters.record).then(res => {
-        this.$message.success(this.$messages.updateSuccess);
+        this.$message.success(this.$messages.result.updateSuccess);
         this.fetchPages();
+        this.closeModal();
       });
     },
     handleDeleteBook() {
-      this.$api.deleteBook(this.bookId).then(() => {
-        this.$message.success(this.$messages.deleteSuccess);
-        this.fetchBooks();
-        this.selectBook(undefined);
+      this.$api.deleteBook(this.$store.getters.bookId).then(() => {
+        this.$message.success(this.$messages.result.deleteSuccess);
+        this.fetchBooks().then(() => {
+          this.selectBook(undefined);
+        });
       });
     },
     handleDeletePart() {
-      this.$api.deletePart(this.partId).then(() => {
-        this.$message.success(this.$messages.deleteSuccess);
-        this.fetchParts();
-        this.selectPart(undefined);
+      this.$api.deletePart(this.$store.getters.partId).then(() => {
+        this.$message.success(this.$messages.result.deleteSuccess);
+        this.fetchParts().then(() => {
+          this.selectPart(undefined);
+        });
       });
     },
     handleDeletePage() {
-      this.$api.deletePage(this.pageId).then(() => {
-        this.$message.success(this.$messages.deleteSuccess);
-        this.fetchPages();
-        this.selectPage(undefined);
+      this.$api.deletePage(this.$store.getters.pageId).then(() => {
+        this.$message.success(this.$messages.result.deleteSuccess);
+        this.fetchPages().then(() => {
+          this.selectPage(undefined);
+        });
       });
     }
   }
@@ -384,6 +411,7 @@ export default {
   line-height: 32px;
   padding: 0 8px;
   border-radius: 4px;
+  margin-bottom: 2px;
 }
 .book-item:hover,.part-item:hover,.page-item:hover {
   cursor: pointer;

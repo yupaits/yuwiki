@@ -1,12 +1,10 @@
 package yuwiki
 
 import (
-	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"log"
 	"os"
-	"strings"
 )
 
 var Db *gorm.DB
@@ -21,22 +19,19 @@ func DbConn() *gorm.DB {
 }
 
 func setOwner(scope *gorm.Scope) {
-	if scope.HasColumn("Owner") {
-		err := scope.SetColumn("Owner", GetUserId())
+	if scope.HasColumn("owner") {
+		err := scope.SetColumn("owner", GetUserId())
 		if err != nil {
-			log.Fatal("设置所有者失败", err)
+			log.Fatal(err)
 		}
 	}
 }
 
 func InitDb(update bool) {
 	dbFile := Config.DataSource.Url
-	if _, err := os.Open(dbFile); err != nil {
-		dir := string(dbFile[:strings.LastIndex(dbFile, "/")])
-		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			log.Fatal(fmt.Sprintf("创建数据库文件所在目录[%s]失败", dir), err)
-		} else if _, err := os.Create(Config.DataSource.Url); err != nil {
-			log.Fatal(fmt.Sprintf("创建数据库文件[%s]失败", dbFile), err)
+	if Mkdirs(dbFile) {
+		if _, err := os.OpenFile(Config.DataSource.Url, os.O_RDWR|os.O_CREATE, 0666); err != nil {
+			log.Fatal(err)
 		}
 	}
 	Db = DbConn()
