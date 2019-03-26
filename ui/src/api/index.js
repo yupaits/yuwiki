@@ -7,6 +7,9 @@ export default {
   getParts(bookId) {
     return client.get(`/books/${bookId}/parts`);
   },
+  getPart(partId) {
+    return client.get(`/parts/${partId}`);
+  },
   getPages(partId) {
     return client.get(`/parts/${partId}/pages`);
   },

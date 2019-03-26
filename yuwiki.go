@@ -46,7 +46,7 @@ func Run() {
 	books := r.Group("/books")
 	{
 		books.GET("", getBooksHandler)
-		books.GET("/:bookId/parts", GetBookPartsHandler)
+		books.GET("/:bookId/parts", getBookPartsHandler)
 		books.POST("", saveBookHandler)
 		books.PUT("/:bookId", saveBookHandler)
 		books.DELETE("/:bookId", deleteBookHandler)
@@ -56,6 +56,7 @@ func Run() {
 	parts := r.Group("/parts")
 	{
 		parts.GET("/:partId/pages", getPartPagesHandler)
+		parts.GET("/:partId", getPartHandler)
 		parts.POST("", savePartHandler)
 		parts.PUT("/:partId", savePartHandler)
 		parts.DELETE("/:partId", deletePartHandler)

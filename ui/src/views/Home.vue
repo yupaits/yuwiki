@@ -57,7 +57,7 @@
               <h2 class="text-title text-bold holder-header">
                 <a-icon type="folder"/> 分区
                 <span v-if="$store.getters.partId">
-                  <a-button size="small" icon="sync" class="ml-1" @click="fetchParts"></a-button>
+                  <a-button size="small" icon="sync" class="ml-1" @click="fetchParts($store.getters.bookId)"></a-button>
                   <span class="pull-right">
                     <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
                     <a-popconfirm title="确定删除此分区吗？" placement="right" @confirm="handleDeletePart">
@@ -67,7 +67,9 @@
                 </span>
               </h2>
               <a-spin :spinning="loading.parts" class="list">
-                  <a-directory-tree :treeData="partTree" @select="selectPart" @expand="onExpand"></a-directory-tree>
+                  <a-tree :treeData="partTree" @select="selectPart">
+                    <a-icon type="folder" slot="part-icon" theme="twoTone"/>
+                  </a-tree>
               </a-spin>
             </div>
           </a-col>
@@ -76,7 +78,7 @@
               <h2 class="text-title text-bold holder-header">
                 <a-icon type="file-text"/> 页面
                 <span v-if="$store.getters.pageId">
-                  <a-button size="small" icon="sync" class="ml-1" @click="fetchParts"></a-button>
+                  <a-button size="small" icon="sync" class="ml-1" @click="fetchPages($store.getters.partId)"></a-button>
                   <span class="pull-right">
                     <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
                     <a-popconfirm title="确定删除此分区吗？" placement="right" @confirm="handleDeletePart">
@@ -108,12 +110,12 @@
 </template>
 
 <script>
-import BookForm from '../components/form/BookForm'
-import PartForm from '../components/form/PartForm'
-import PageForm from '../components/form/PageForm'
-import ModifyPasswordForm from '../components/form/ModifyPasswordForm'
-import PageEditor from '../components/PageEditor'
-export default {
+  import BookForm from '../components/form/BookForm'
+  import PartForm from '../components/form/PartForm'
+  import PageForm from '../components/form/PageForm'
+  import PageEditor from '../components/PageEditor'
+
+  export default {
   components: {
     PageEditor
   },
@@ -122,6 +124,7 @@ export default {
       books: [],
       parts: [],
       pages: [],
+      selectedPart: {},
       viewedPage: {},
       loading: {
         books: false,
@@ -166,7 +169,9 @@ export default {
             title: part.name,
             key: part.ID,
             isLeaf: part.partType === 'PART',
-            icon: 'folder'
+            scopedSlots: {
+              icon: 'part-icon'
+            }
           });
         })
       }
@@ -177,10 +182,7 @@ export default {
       return (type ? type.label : '') + this.title[this.modal.key];
     },
     selectedBook() {
-      return this.books.filter(book => book.ID === this.bookId)[0] || {};
-    },
-    selectedPart() {
-      return this.parts.filter(part => part.ID === this.partId)[0] || {};
+      return this.books.filter(book => book.ID === this.$store.getters.bookId)[0] || {};
     },
     form() {
       return this.forms[this.modal.key];
@@ -200,24 +202,29 @@ export default {
         this.loading.books = false;
       });
     },
-    fetchParts() {
+    fetchParts(bookId) {
       this.loading.parts = true;
-      this.$api.getParts(this.$store.getters.bookId).then(res => {
+      this.$api.getParts(bookId).then(res => {
         this.parts = res.data;
         this.loading.parts = false;
-        return Promise.resovle();
+        return Promise.resolve();
       }).catch(() => {
         this.loading.parts = false;
       });
     },
-    fetchPages() {
+    fetchPages(partId) {
       this.loading.pages = true;
-      this.$api.getPages(this.$store.getters.partId).then(res => {
+      this.$api.getPages(partId).then(res => {
         this.pages = res.data;
         this.loading.pages = false;
         return Promise.resolve();
       }).catch(() => {
         this.loading.pages = false;
+      });
+    },
+    fetchPart(partId) {
+      this.$api.getPart(partId).then(res => {
+        this.selectedPart = res.data;
       });
     },
     viewPage() {
@@ -252,15 +259,22 @@ export default {
       this.$store.dispatch('setPartId', undefined);
       this.$store.dispatch('setPageId', undefined);
       this.viewedPage = {};
-      this.fetchParts();
+      this.fetchParts(bookId);
     },
-    selectPart(partId) {
-      this.$store.dispatch('setPartId', partId);
-      this.$store.dispatch('setPageId', undefined);
-      this.viewedPage = {};
-      this.fetchPages();
+    selectPart(partIds) {
+      if (partIds && partIds.length === 1) {
+        const partId = partIds[0];
+        this.$store.dispatch('setPartId', partId);
+        this.fetchPart(partId);
+        this.fetchPages(partId);
+      } else {
+        this.$store.dispatch('setPartId', undefined);
+        this.$store.dispatch('setPageId', undefined);
+        this.selectedPart = {};
+        this.pages = [];
+        this.viewedPage = {};
+      }
     },
-    onExpand() {},
     selectPage(pageId) {
       this.$store.dispatch('setPageId', pageId);
       this.viewPage();
@@ -287,44 +301,44 @@ export default {
       this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.viewedPage)));
     },
     handleAddBook() {
-      this.$api.addBook(this.$store.getters.record).then(res => {
+      this.$api.addBook(this.$store.getters.record).then(() => {
         this.$message.success(this.$messages.result.createSuccess);
         this.fetchBooks();
         this.closeModal();
       });
     },
     handleAddPart() {
-      this.$api.addPart(this.$store.getters.record).then(res => {
+      this.$api.addPart(this.$store.getters.record).then(() => {
         this.$message.success(this.$messages.result.createSuccess);
-        this.fetchParts();
+        this.fetchParts(this.$store.getters.bookId);
         this.closeModal();
       });
     },
     handleAddPage() {
-      this.$api.addPage(this.$store.getters.record).then(res => {
+      this.$api.addPage(this.$store.getters.record).then(() => {
         this.$message.success(this.$messages.result.createSuccess);
-        this.fetchPages();
+        this.fetchPages(this.$store.getters.partId);
         this.closeModal();
       });
     },
     handleEditBook() {
-      this.$api.editBook(this.$store.getters.record).then(res => {
+      this.$api.editBook(this.$store.getters.record).then(() => {
         this.$message.success(this.$messages.result.updateSuccess);
         this.fetchBooks();
         this.closeModal();
       });
     },
     handleEditPart() {
-      this.$api.editPart(this.$store.getters.record).then(res => {
+      this.$api.editPart(this.$store.getters.record).then(() => {
         this.$message.success(this.$messages.result.updateSuccess);
-        this.fetchParts();
+        this.fetchParts(this.$store.getters.bookId);
         this.closeModal();
       });
     },
     handleEditPage() {
-      this.$api.editPage(this.$store.getters.record).then(res => {
+      this.$api.editPage(this.$store.getters.record).then(() => {
         this.$message.success(this.$messages.result.updateSuccess);
-        this.fetchPages();
+        this.fetchPages(this.$store.getters.partId);
         this.closeModal();
       });
     },
@@ -339,7 +353,7 @@ export default {
     handleDeletePart() {
       this.$api.deletePart(this.$store.getters.partId).then(() => {
         this.$message.success(this.$messages.result.deleteSuccess);
-        this.fetchParts().then(() => {
+        this.fetchParts(this.$store.getters.bookId).then(() => {
           this.selectPart(undefined);
         });
       });
@@ -347,7 +361,7 @@ export default {
     handleDeletePage() {
       this.$api.deletePage(this.$store.getters.pageId).then(() => {
         this.$message.success(this.$messages.result.deleteSuccess);
-        this.fetchPages().then(() => {
+        this.fetchPages(this.$store.getters.partId).then(() => {
           this.selectPage(undefined);
         });
       });

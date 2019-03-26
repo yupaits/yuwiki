@@ -34,7 +34,9 @@
 export default {
   computed: {
     part() {
-      return this.$store.getters.record;
+      const record = this.$store.getters.record;
+      record.bookId = this.$store.getters.bookId;
+      return record;
     },
     partTree() {
       let tree = [];
@@ -80,7 +82,11 @@ export default {
       });
     },
     handleBookChange(bookId) {
-      this.fetchBookParts(bookId);
+      if (bookId) {
+        this.fetchBookParts(bookId);
+      } else {
+        this.parts = [];
+      }
     },
     handlePartTypeChange(e) {
       const partType = e.target.value;

@@ -21,11 +21,19 @@ func getBooksHandler(c *gin.Context) {
 	Result(c, OkData(getBooks()))
 }
 
-func GetBookPartsHandler(c *gin.Context) {
+func getBookPartsHandler(c *gin.Context) {
 	if bookId, err := strconv.ParseUint(c.Param("bookId"), 10, 32); err != nil {
 		Result(c, CodeFail(ParamsError))
 	} else {
 		Result(c, OkData(getBookParts(uint(bookId))))
+	}
+}
+
+func getPartHandler(c *gin.Context) {
+	if partId, err := strconv.ParseUint(c.Param("partId"), 10, 32); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else {
+		Result(c, OkData(getPart(uint(partId))))
 	}
 }
 
