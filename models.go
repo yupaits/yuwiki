@@ -172,13 +172,13 @@ func deleteBook(id uint) bool {
 	if partCount+pageCount > 0 {
 		return false
 	}
-	err := Db.Where("id = ?", id).Delete(Book{}).Error
+	err := Db.Where("id = ? AND owner = ?", id, getUserId()).Delete(Book{}).Error
 	return err == nil
 }
 
 func getBookParts(bookId uint) *[]TreePart {
 	parts := &[]Part{}
-	if err := Db.Where("book_id = ? AND parent_Id = 0", bookId).Find(parts).Error; err != nil {
+	if err := Db.Where("book_id = ? AND parent_Id = 0 AND owner = ?", bookId, getUserId()).Find(parts).Error; err != nil {
 		log.Fatal(fmt.Sprintf("获取笔记本分区清单失败，bookId: %d", bookId), err)
 	}
 	var treeParts []TreePart
@@ -236,13 +236,13 @@ func deletePart(id uint) bool {
 	if subPartCount+pageCount > 0 {
 		return false
 	}
-	err := Db.Where("id = ?", id).Delete(Part{}).Error
+	err := Db.Where("id = ? AND owner = ?", id, getUserId()).Delete(Part{}).Error
 	return err == nil
 }
 
 func getPartPages(partId uint) *[]Page {
 	pages := &[]Page{}
-	if err := Db.Where("part_id = ?", partId).Find(pages).Error; err != nil {
+	if err := Db.Where("part_id = ? AND owner = ?", partId, getUserId()).Find(pages).Error; err != nil {
 		log.Fatal(fmt.Sprintf("获取分区页面清单失败，partId: %d", partId), err)
 	}
 	for _, page := range *pages {
@@ -253,7 +253,7 @@ func getPartPages(partId uint) *[]Page {
 
 func getPage(id uint) *Page {
 	page := &Page{}
-	if err := Db.Where("id = ?", id).Find(page).Error; err != nil {
+	if err := Db.Where("id = ? AND owner = ?", id, getUserId()).Find(page).Error; err != nil {
 		log.Fatal(fmt.Sprintf("获取页面失败，pageId: %d", id), err)
 	}
 	return page
@@ -270,14 +270,13 @@ func savePage(page *Page) bool {
 }
 
 func deletePage(id uint) bool {
-	err := Db.Where("id = ?", id).Delete(Page{}).Error
+	err := Db.Where("id = ? AND owner = ?", id, getUserId()).Delete(Page{}).Error
 	return err == nil
 }
 
 func getSharedBooks() *[]Book {
-	userId := getUserId()
 	sharedBooks := &[]SharedBook{}
-	Db.Where("user_id = ?", userId).Find(sharedBooks)
+	Db.Where("user_id = ?", getUserId()).Find(sharedBooks)
 	var bookIds []uint
 	for _, sharedBook := range *sharedBooks {
 		bookIds = append(bookIds, sharedBook.BookId)
