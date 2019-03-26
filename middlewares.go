@@ -1,5 +1,5 @@
 package yuwiki
 
-func GetUserId() uint {
+func getUserId() uint {
 	return 1
 }

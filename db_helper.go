@@ -20,7 +20,7 @@ func DbConn() *gorm.DB {
 
 func setOwner(scope *gorm.Scope) {
 	if scope.HasColumn("owner") {
-		err := scope.SetColumn("owner", GetUserId())
+		err := scope.SetColumn("owner", getUserId())
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -39,29 +39,39 @@ func InitDb(update bool) {
 	Db.DB().SetMaxIdleConns(100)
 	Db.Callback().Create().Before("gorm:create").Register("set_owner", setOwner)
 	Db.LogMode(false)
+	book := &Book{}
+	part := &Part{}
+	page := &Page{}
+	tag := &Tag{}
+	sharedBook := &SharedBook{}
 	if update {
-		if Db.HasTable(&Book{}) {
-			Db.AutoMigrate(&Book{})
+		if Db.HasTable(book) {
+			Db.AutoMigrate(book)
 		} else {
-			Db.CreateTable(&Book{})
+			Db.CreateTable(book)
 		}
-		if Db.HasTable(&Part{}) {
-			Db.AutoMigrate(&Part{})
+		if Db.HasTable(part) {
+			Db.AutoMigrate(part)
 		} else {
-			Db.CreateTable(&Part{})
+			Db.CreateTable(part)
 		}
-		if Db.HasTable(&Page{}) {
-			Db.AutoMigrate(&Page{})
+		if Db.HasTable(page) {
+			Db.AutoMigrate(page)
 		} else {
-			Db.CreateTable(&Page{})
+			Db.CreateTable(page)
 		}
-		if Db.HasTable(&Tag{}) {
-			Db.AutoMigrate(&Tag{})
+		if Db.HasTable(tag) {
+			Db.AutoMigrate(tag)
 		} else {
-			Db.CreateTable(&Tag{})
+			Db.CreateTable(tag)
+		}
+		if Db.HasTable(sharedBook) {
+			Db.AutoMigrate(sharedBook)
+		} else {
+			Db.CreateTable(sharedBook)
 		}
 	} else {
-		Db.DropTableIfExists(&Book{}, &Part{}, &Page{}, &Tag{})
-		Db.CreateTable(&Book{}, &Part{}, &Page{}, &Tag{})
+		Db.DropTableIfExists(book, part, page, tag, sharedBook)
+		Db.CreateTable(book, part, page, tag, sharedBook)
 	}
 }

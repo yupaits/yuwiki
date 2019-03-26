@@ -71,12 +71,18 @@ type Tag struct {
 }
 
 type TreePart struct {
-	Part     Part
+	Part
 	SubParts *[]TreePart
 }
 
+type SharedBook struct {
+	gorm.Model
+	BookId uint `gorm:"not null;index" json:"bookId" binding:"required"`
+	UserId uint `gorm:"not null;index" json:"userId" binding:"required"`
+}
+
 func currentUser() (*User, error) {
-	userId := GetUserId()
+	userId := getUserId()
 	user := &User{}
 	if err := Db.Where("id = ?", userId).Find(user).Error; err != nil {
 		log.Fatal("获取当前用户信息失败", err)
@@ -85,15 +91,18 @@ func currentUser() (*User, error) {
 	return user, nil
 }
 
-func GetCurrentUser() *User {
-	user, _ := currentUser()
-	user.Password = ""
-	user.Salt = ""
-	user.InitPassword = ""
-	return user
+func getCurrentUser() (*User, error) {
+	if user, err := currentUser(); err != nil {
+		return nil, err
+	} else {
+		user.Password = ""
+		user.Salt = ""
+		user.InitPassword = ""
+		return user, nil
+	}
 }
 
-func SaveUser(user *User) bool {
+func saveUser(user *User) bool {
 	var err error
 	if Db.NewRecord(user) {
 		//设置初始化密码
@@ -113,7 +122,7 @@ func SaveUser(user *User) bool {
 	return err == nil
 }
 
-func modifyPassword(modify PasswordModify) (bool, string) {
+func modifyPassword(modify *PasswordModify) (bool, string) {
 	user, _ := currentUser()
 	if modify.OldPassword == "" || modify.NewPassword == "" || modify.ConfirmPassword == "" {
 		return false, "原密码、新密码、确认密码均不能为空"
@@ -139,7 +148,7 @@ func modifyPassword(modify PasswordModify) (bool, string) {
 
 func getBooks() *[]Book {
 	books := &[]Book{}
-	owner := GetUserId()
+	owner := getUserId()
 	if err := Db.Where("owner = ?", owner).Find(books).Error; err != nil {
 		log.Fatal("获取笔记本清单失败", err)
 	}
@@ -196,10 +205,7 @@ func getSubParts(parentId uint) *[]TreePart {
 		if part.Protected && part.Password != "" {
 			part.Password = ""
 		}
-		subParts = append(subParts, TreePart{
-			Part:     part,
-			SubParts: getSubParts(part.ID),
-		})
+		subParts = append(subParts, TreePart{part, getSubParts(part.ID)})
 	}
 	return &subParts
 }
@@ -266,4 +272,39 @@ func savePage(page *Page) bool {
 func deletePage(id uint) bool {
 	err := Db.Where("id = ?", id).Delete(Page{}).Error
 	return err == nil
+}
+
+func getSharedBooks() *[]Book {
+	userId := getUserId()
+	sharedBooks := &[]SharedBook{}
+	Db.Where("user_id = ?", userId).Find(sharedBooks)
+	var bookIds []uint
+	for _, sharedBook := range *sharedBooks {
+		bookIds = append(bookIds, sharedBook.BookId)
+	}
+	books := &[]Book{}
+	Db.Where("book_id in (?)", bookIds).Find(books)
+	return books
+}
+
+func saveSharedBook(sharedBook *SharedBook) bool {
+	var err error
+	if Db.NewRecord(sharedBook) {
+		err = Db.Create(sharedBook).Error
+	} else {
+		err = Db.Model(sharedBook).Updates(sharedBook).Error
+	}
+	return err == nil
+}
+
+func getStarItems() *StarItems {
+	var starBooks []Book
+	var starParts []Part
+	var starPages []Page
+	starItems := &StarItems{
+		Books: &starBooks,
+		Parts: &starParts,
+		Pages: &starPages,
+	}
+	return starItems
 }

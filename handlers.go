@@ -7,8 +7,14 @@ import (
 
 type PasswordModify struct {
 	OldPassword     string `json:"oldPassword" binding:"required"`
-	NewPassword     string `json:"oldPassword" binding:"required"`
-	ConfirmPassword string `json:"oldPassword" binding:"required"`
+	NewPassword     string `json:"newPassword" binding:"required"`
+	ConfirmPassword string `json:"confirmPassword" binding:"required"`
+}
+
+type StarItems struct {
+	Books *[]Book
+	Parts *[]Part
+	Pages *[]Page
 }
 
 func getBooksHandler(c *gin.Context) {
@@ -24,7 +30,7 @@ func GetBookPartsHandler(c *gin.Context) {
 }
 
 func getSharedBooksHandler(c *gin.Context) {
-
+	Result(c, OkData(getSharedBooks()))
 }
 
 func saveBookHandler(c *gin.Context) {
@@ -49,11 +55,22 @@ func deleteBookHandler(c *gin.Context) {
 }
 
 func shareBookHandler(c *gin.Context) {
-
+	sharedBook := &SharedBook{}
+	if err := c.ShouldBind(sharedBook); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if saveSharedBook(sharedBook) {
+		Result(c, Ok())
+	} else {
+		Result(c, CodeFail(SaveFail))
+	}
 }
 
 func getPartPagesHandler(c *gin.Context) {
-
+	if partId, err := strconv.ParseUint(c.Param("partId"), 10, 32); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else {
+		Result(c, OkData(getPartPages(uint(partId))))
+	}
 }
 
 func savePartHandler(c *gin.Context) {
@@ -74,31 +91,65 @@ func savePartHandler(c *gin.Context) {
 }
 
 func deletePartHandler(c *gin.Context) {
-
+	if partId, err := strconv.ParseUint(c.Param("partId"), 10, 32); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if deletePart(uint(partId)) {
+		Result(c, Ok())
+	} else {
+		Result(c, CodeFail(DeleteFail))
+	}
 }
 
 func getPageHandler(c *gin.Context) {
-
+	pageId, err := strconv.ParseUint(c.Param("pageId"), 10, 32)
+	if err != nil {
+		Result(c, CodeFail(ParamsError))
+	}
+	Result(c, OkData(getPage(uint(pageId))))
 }
 
 func savePageHandler(c *gin.Context) {
-
+	page := &Page{}
+	if err := c.ShouldBind(page); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if savePage(page) {
+		Result(c, Ok())
+	} else {
+		Result(c, CodeFail(SaveFail))
+	}
 }
 
 func deletePageHandler(c *gin.Context) {
-
+	if pageId, err := strconv.ParseUint(c.Param("pageId"), 10, 32); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if deletePage(uint(pageId)) {
+		Result(c, Ok())
+	} else {
+		Result(c, CodeFail(DeleteFail))
+	}
 }
 
 func getUserInfoHandler(c *gin.Context) {
-
+	if user, err := getCurrentUser(); err != nil {
+		Result(c, MsgFail(err.Error()))
+	} else {
+		Result(c, OkData(user))
+	}
 }
 
 func modifyPasswordHandler(c *gin.Context) {
-
+	modify := &PasswordModify{}
+	if err := c.ShouldBind(modify); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if ok, msg := modifyPassword(modify); ok {
+		Result(c, Ok())
+	} else {
+		Result(c, MsgFail(msg))
+	}
 }
 
 func getStarItemsHandler(c *gin.Context) {
-
+	Result(c, OkData(getStarItems()))
 }
 
 func siteSearchHandler(c *gin.Context) {
