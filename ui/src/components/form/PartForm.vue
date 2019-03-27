@@ -34,7 +34,7 @@
 export default {
   computed: {
     part() {
-      const part = this.$store.getters.record;
+      const part = this.$store.state.record;
       part.bookId = this.$store.getters.bookId;
       return part;
     },

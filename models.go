@@ -212,7 +212,7 @@ func getSubParts(parentId uint) *[]TreePart {
 
 func getPart(partId uint) *Part {
 	part := &Part{}
-	if err := Db.Where("id = ? AND owner = ?", partId, getUserId()).Error; err != nil {
+	if err := Db.Where("id = ? AND owner = ?", partId, getUserId()).Find(part).Error; err != nil {
 		log.Fatal(fmt.Sprintf("获取分区信息失败，partId: %d", partId), err)
 	}
 	return part

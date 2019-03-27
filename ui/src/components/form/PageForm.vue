@@ -27,10 +27,12 @@ export default {
       let tree = [];
       if (this.parts && this.parts.length > 0) {
         this.parts.forEach(part => {
+          const isLeaf = part.partType === 0;
           tree.push({
             key: part.ID,
             value: part.ID,
-            isLeaf: part.partType === 0,
+            selectable: isLeaf,
+            isLeaf: isLeaf,
             scopedSlots: {title: 'part-title'}
           });
         })
