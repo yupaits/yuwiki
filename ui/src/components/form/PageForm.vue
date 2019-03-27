@@ -18,13 +18,59 @@
 export default {
   computed: {
     page() {
-      return this.$store.getters.record;
+      const page = this.$store.getters.record;
+      page.bookId = this.$store.getters.bookId;
+      page.partId = this.$store.getters.partId;
+      return page;
+    },
+    partTree() {
+      let tree = [];
+      if (this.parts && this.parts.length > 0) {
+        this.parts.forEach(part => {
+          tree.push({
+            key: part.ID,
+            value: part.ID,
+            isLeaf: part.partType === 0,
+            scopedSlots: {title: 'part-title'}
+          });
+        })
+      }
+      return tree;
     }
   },
   watch: {
     page(val) {
       this.$store.dispatch('setRecord', val);
     }
+  },
+  data() {
+    return {
+      books: [],
+      parts: []
+    }
+  },
+  created() {
+    this.fetchBooks();
+    this.fetchBookParts(this.$store.getters.bookId);
+  },
+  methods: {
+    fetchBooks() {
+      this.$api.getBooks().then(res => {
+        this.books = res.data;
+      });
+    },
+    fetchBookParts(bookId) {
+      this.$api.getParts(bookId).then(res => {
+        this.parts = res.data;
+      });
+    },
+    handleBookChange(bookId) {
+      if (bookId) {
+        this.fetchBookParts(bookId);
+      } else {
+        this.parts = [];
+      }
+    },
   }
 }
 </script>

@@ -18,8 +18,8 @@
       </a-form-item>
       <a-form-item label="分区类型" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper" required>
         <a-radio-group v-model="partType" @change="handlePartTypeChange">
-          <a-radio value="PART">分区</a-radio>
-          <a-radio value="GROUP">分区组</a-radio>
+          <a-radio :value="0">分区</a-radio>
+          <a-radio :value="1">分区组</a-radio>
         </a-radio-group>
       </a-form-item>
       <a-form-item label="密码保护" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper" required>
@@ -34,18 +34,19 @@
 export default {
   computed: {
     part() {
-      const record = this.$store.getters.record;
-      record.bookId = this.$store.getters.bookId;
-      return record;
+      const part = this.$store.getters.record;
+      part.bookId = this.$store.getters.bookId;
+      return part;
     },
     partTree() {
       let tree = [];
       if (this.parts && this.parts.length > 0) {
         this.parts.forEach(part => {
-          if (part.partType === 'GROUP') {
+          if (part.partType === 1) {
             tree.push({
               key: part.ID,
               value: part.ID,
+              isLeaf: false,
               scopedSlots: {title: 'part-title'}
             });
           }
@@ -56,13 +57,13 @@ export default {
   },
   watch: {
     part(val) {
-      this.partType = val.partType || 'PART';
+      this.partType = val.partType || 0;
       this.$store.dispatch('setRecord', val);
     }
   },
   data() {
     return {
-      partType: 'PART',
+      partType: 0,
       books: [],
       parts: [],
     }
