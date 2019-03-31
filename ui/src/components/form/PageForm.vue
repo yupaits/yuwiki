@@ -35,7 +35,7 @@ export default {
             isLeaf: isLeaf,
             scopedSlots: {title: 'part-title'}
           });
-        })
+        });
       }
       return tree;
     }

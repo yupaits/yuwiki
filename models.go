@@ -52,6 +52,7 @@ type Part struct {
 	Protected bool   `json:"protected"`
 	Password  string `gorm:"size:60" json:"password"`
 	Owner     uint   `gorm:"not null"`
+	SortCode  uint   `gorm:"not null"`
 }
 
 type Page struct {
@@ -207,7 +208,11 @@ func getSubParts(parentId uint) *[]TreePart {
 		}
 		subParts = append(subParts, TreePart{part, getSubParts(part.ID)})
 	}
-	return &subParts
+	if subParts == nil {
+		return &[]TreePart{}
+	} else {
+		return &subParts
+	}
 }
 
 func getPart(partId uint) *Part {
