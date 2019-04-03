@@ -30,7 +30,6 @@
 export default {
   computed: {
     part() {
-      console.log(this.$store.getters.record);
       return this.$store.state.record;
     }
   },
