@@ -2,10 +2,12 @@
   <div>
     <a-form>
       <a-form-item label="笔记本" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper" required>
-        <a-select v-model="page.bookId" placeholder="请选择笔记本"></a-select>
+        <a-select v-model="page.bookId" allowClear placeholder="请选择笔记本" @change="handleBookChange">
+          <a-select-option v-for="book in books" :key="book.ID" :value="book.ID"><a-icon type="book" theme="twoTone" :twoToneColor="book.color"/> {{book.name}}</a-select-option>
+        </a-select>
       </a-form-item>
-      <a-form-item label="分区" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper" required>
-        <a-select v-model="page.partId" placeholder="请选择分区"></a-select>
+      <a-form-item label="分区" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper">
+        <a-tree-select v-model="page.partId" :treeData="partTree" treeNodeLabelProp="label" allowClear placeholder="请选择所属分区"></a-tree-select>
       </a-form-item>
       <a-form-item label="标题" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper" required>
         <a-textarea v-model="page.title" :autosize="{minRows: 3, maxRows: 6}" placeholder="请填写页面标题"></a-textarea>
@@ -18,26 +20,7 @@
 export default {
   computed: {
     page() {
-      const page = this.$store.getters.record;
-      page.bookId = this.$store.getters.bookId;
-      page.partId = this.$store.getters.partId;
-      return page;
-    },
-    partTree() {
-      let tree = [];
-      if (this.parts && this.parts.length > 0) {
-        this.parts.forEach(part => {
-          const isLeaf = part.partType === 0;
-          tree.push({
-            key: part.ID,
-            value: part.ID,
-            selectable: isLeaf,
-            isLeaf: isLeaf,
-            scopedSlots: {title: 'part-title'}
-          });
-        });
-      }
-      return tree;
+      return this.$store.getters.record;
     }
   },
   watch: {
@@ -48,12 +31,21 @@ export default {
   data() {
     return {
       books: [],
-      parts: []
+      partTree: [],
+      page: {},
     }
   },
   created() {
     this.fetchBooks();
-    this.fetchBookParts(this.$store.getters.bookId);
+    const bookId = this.$store.getters.bookId;
+    if (bookId) {
+      this.page.bookId = bookId;
+      this.fetchBookParts(bookId);
+      const part = this.$store.getters.part;
+      if (part) {
+        this.$set(this.page, 'partId', part.partType === 0 ? part.ID : undefined);
+      }
+    }
   },
   methods: {
     fetchBooks() {
@@ -63,16 +55,34 @@ export default {
     },
     fetchBookParts(bookId) {
       this.$api.getParts(bookId).then(res => {
-        this.parts = res.data;
+        this.partTree = this.toTreeData([], undefined, res.data);
       });
+    },
+    toTreeData(treeData, prefix, parts) {
+      if (parts instanceof Array) {
+        parts.forEach(part => {
+          const node = {
+            title: part.name,
+            value: part.ID,
+            key: part.ID,
+            label: (prefix ? prefix + ' / ' : '') + part.name,
+            children: [],
+            disabled: part.partType === 1
+          }
+          this.toTreeData(node.children, node.label, part.SubParts);
+          treeData.push(node);
+        });
+      }
+      return treeData;
     },
     handleBookChange(bookId) {
       if (bookId) {
         this.fetchBookParts(bookId);
       } else {
-        this.parts = [];
+        this.partTree = [];
       }
-    },
+      this.$set(this.page, 'partId', undefined);
+    }
   }
 }
 </script>

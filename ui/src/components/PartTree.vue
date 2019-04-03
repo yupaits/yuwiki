@@ -14,20 +14,6 @@
         type: Array,
         required: true
       }
-    },
-    data() {
-      return {
-        selectedPart: {}
-      }
-    },
-    methods: {
-      selectPart(partId) {
-        if (partId) {
-          const partId = partId;
-          this.$store.dispatch('setPartId', partId);
-          this.$emit('select', partId);
-        }
-      },
     }
   }
 </script>

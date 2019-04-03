@@ -11,7 +11,7 @@
           <a-dropdown>
             <a-menu slot="overlay" @click="handleCreate">
               <a-menu-item key="book"><a-icon type="book"/>笔记本</a-menu-item>
-              <a-menu-item key="part"><a-icon type="folder"/>分区</a-menu-item>
+              <a-menu-item key="part"><a-icon type="folder-open"/>分区</a-menu-item>
               <a-menu-item key="page"><a-icon type="file-text"/>页面</a-menu-item>
             </a-menu>
             <a-button icon="plus" class="ml-1">
@@ -55,7 +55,7 @@
           <a-col :span="4">
             <div class="holder">
               <h2 class="text-title text-bold holder-header">
-                <a-icon type="folder"/> 分区
+                <a-icon type="folder-open"/> 分区
                 <span v-if="$store.getters.partId">
                   <a-button size="small" icon="sync" class="ml-1" @click="fetchParts($store.getters.bookId)"></a-button>
                   <span class="pull-right">
@@ -67,7 +67,7 @@
                 </span>
               </h2>
               <a-spin :spinning="loading.parts" class="list">
-                <part-tree :parts="parts" @select="partId => this.fetchPages(partId)"/>
+                <part-tree :parts="parts"/>
               </a-spin>
             </div>
           </a-col>
@@ -78,8 +78,8 @@
                 <span v-if="$store.getters.pageId">
                   <a-button size="small" icon="sync" class="ml-1" @click="fetchPages($store.getters.partId)"></a-button>
                   <span class="pull-right">
-                    <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
-                    <a-popconfirm title="确定删除此页面吗？" placement="right" @confirm="handleDeletePart">
+                    <a-button size="small" icon="edit" class="mr-1" @click="editPage"></a-button>
+                    <a-popconfirm title="确定删除此页面吗？" placement="right" @confirm="handleDeletePage">
                       <a-button size="small" icon="delete"></a-button>
                     </a-popconfirm>
                   </span>
@@ -87,7 +87,7 @@
               </h2>
               <a-spin :spinning="loading.pages" class="list">
                 <div v-for="page in pages" :key="page.ID" class="page-item" :class="{'active': $store.getters.pageId === page.ID}" @click="selectPage(page.ID)">
-                  <span :style="{fontSize: '18px'}"><a-icon type="file-text"/> {{page.title}}</span>
+                  <span :style="{fontSize: '14px'}"><a-icon type="file-text"/> {{page.title}}</span>
                 </div>
               </a-spin>
             </div>
@@ -162,6 +162,14 @@
           book: BookForm,
           part: PartForm,
           page: PageForm,
+        },
+        default: {
+          book: {},
+          part: {
+            partType: 0,
+            protected: false
+          },
+          page: {}
         }
       }
     },
@@ -196,7 +204,6 @@
         this.$api.getParts(bookId).then(res => {
           this.parts = res.data;
           this.loading.parts = false;
-          return Promise.resolve();
         }).catch(() => {
           this.loading.parts = false;
         });
@@ -232,7 +239,7 @@
         };
       },
       handleCreate({key}) {
-        this.$store.dispatch('setRecord', {});
+        this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.default[key])));
         this.showModal('create', key);
       },
       closeModal() {
@@ -259,7 +266,7 @@
         };
       },
       editPart() {
-        this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.selectedPart)));
+        this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.$store.getters.part)));
         this.modal = {
           type: 'modify',
           key: 'part',
@@ -280,14 +287,18 @@
       handleAddPart() {
         this.$api.addPart(this.$store.getters.record).then(() => {
           this.$message.success(this.$messages.result.createSuccess);
-          this.fetchParts(this.$store.getters.bookId);
+          if (this.$store.getters.bookId) {
+            this.fetchParts(this.$store.getters.bookId);
+          }
           this.closeModal();
         });
       },
       handleAddPage() {
         this.$api.addPage(this.$store.getters.record).then(() => {
           this.$message.success(this.$messages.result.createSuccess);
-          this.fetchPages(this.$store.getters.partId);
+          if (this.$store.getters.partId) {
+            this.fetchPages(this.$store.getters.partId);
+          }
           this.closeModal();
         });
       },
@@ -299,9 +310,11 @@
         });
       },
       handleEditPart() {
-        this.$api.editPart(this.$store.getters.record).then(() => {
+        const part = this.$store.getters.record;
+        this.$api.editPart(part).then(() => {
           this.$message.success(this.$messages.result.updateSuccess);
           this.fetchParts(this.$store.getters.bookId);
+          this.$store.dispatch('setPart', part);
           this.closeModal();
         });
       },
@@ -323,9 +336,7 @@
       handleDeletePart() {
         this.$api.deletePart(this.$store.getters.partId).then(() => {
           this.$message.success(this.$messages.result.deleteSuccess);
-          this.fetchParts(this.$store.getters.bookId).then(() => {
-            this.selectPart(undefined);
-          });
+          this.fetchParts(this.$store.getters.bookId);
         });
       },
       handleDeletePage() {
@@ -391,17 +402,17 @@
   overflow-x: hidden;
   overflow-y: auto;
 }
-.book-item,.part-item,.page-item {
+.book-item,.page-item {
   line-height: 32px;
   padding: 0 8px;
   border-radius: 4px;
   margin-bottom: 2px;
 }
-.book-item:hover,.part-item:hover,.page-item:hover {
+.book-item:hover,.page-item:hover {
   cursor: pointer;
   background: #e6f7ff;
 }
-.book-item.active,.part-item.active,.page-item.active {
+.book-item.active,.page-item.active {
   background: #91d5ff;
   font-weight: bold;
   color: #262626;

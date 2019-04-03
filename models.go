@@ -1,6 +1,7 @@
 package yuwiki
 
 import (
+	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"log"
@@ -52,7 +53,7 @@ type Part struct {
 	Protected bool   `json:"protected"`
 	Password  string `gorm:"size:60" json:"password"`
 	Owner     uint   `gorm:"not null"`
-	SortCode  uint   `gorm:"not null"`
+	SortCode  uint   `gorm:"unique;not null"`
 }
 
 type Page struct {
@@ -118,7 +119,7 @@ func saveUser(user *User) bool {
 		user.InitPassword = ""
 		user.Password = ""
 		user.Salt = ""
-		err = Db.Model(user).Updates(user).Error
+		err = Db.Save(user).Error
 	}
 	return err == nil
 }
@@ -161,7 +162,7 @@ func saveBook(book *Book) bool {
 	if Db.NewRecord(book) {
 		err = Db.Create(book).Error
 	} else {
-		err = Db.Model(book).Updates(book).Error
+		err = Db.Save(book).Error
 	}
 	return err == nil
 }
@@ -237,7 +238,23 @@ func savePart(part *Part) (bool, error) {
 	if Db.NewRecord(part) {
 		err = Db.Create(part).Error
 	} else {
-		err = Db.Model(part).Updates(part).Error
+		dbPart := &Part{}
+		if err := Db.Where("id = ? AND owner = ?", part.ID, getUserId()).Find(dbPart).Error; err != nil {
+			return false, err
+		} else if dbPart.PartType == GROUP && part.PartType == PART {
+			var subPartCount uint
+			Db.Model(&Part{}).Where("parent_id = ?", part.ID).Count(&subPartCount)
+			if subPartCount > 0 {
+				return false, errors.New("包含子分区的分区组不能修改分区类型")
+			}
+		} else if dbPart.PartType == PART && part.PartType == GROUP {
+			var pageCount uint
+			Db.Model(&Page{}).Where("part_id = ? AND owner = ?", part.ID, getUserId()).Count(&pageCount)
+			if pageCount > 0 {
+				return false, errors.New("包含页面的分区不能修改分区类型")
+			}
+		}
+		err = Db.Save(part).Error
 	}
 	return err == nil, err
 }
@@ -277,7 +294,7 @@ func savePage(page *Page) bool {
 	if Db.NewRecord(page) {
 		err = Db.Create(page).Error
 	} else {
-		err = Db.Model(page).Updates(page).Error
+		err = Db.Save(page).Error
 	}
 	return err == nil
 }
@@ -304,7 +321,7 @@ func saveSharedBook(sharedBook *SharedBook) bool {
 	if Db.NewRecord(sharedBook) {
 		err = Db.Create(sharedBook).Error
 	} else {
-		err = Db.Model(sharedBook).Updates(sharedBook).Error
+		err = Db.Save(sharedBook).Error
 	}
 	return err == nil
 }

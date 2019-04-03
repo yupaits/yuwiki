@@ -11,7 +11,8 @@ export default new Vuex.Store({
     record: {},
     bookId: undefined,
     partId: undefined,
-    pageId: undefined
+    pageId: undefined,
+    part: {}
   },
   getters: {
     user(state) {
@@ -28,6 +29,9 @@ export default new Vuex.Store({
     },
     pageId(state) {
       return state.pageId;
+    },
+    part(state) {
+      return state.part;
     }
   },
   mutations: {
@@ -46,6 +50,9 @@ export default new Vuex.Store({
     setPageId(state, pageId) {
       state.pageId = pageId;
     },
+    setPart(state, part) {
+      state.part = part;
+    }
   },
   actions: {
     setUser({commit}, user) {
@@ -63,5 +70,8 @@ export default new Vuex.Store({
     setPageId({commit}, pageId) {
       commit('setPageId', pageId);
     },
+    setPart({commit}, part) {
+      commit('setPart', part);
+    }
   }
 })
