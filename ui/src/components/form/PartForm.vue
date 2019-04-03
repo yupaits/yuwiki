@@ -30,7 +30,13 @@
 export default {
   computed: {
     part() {
-      return this.$store.state.record;
+      const part = this.$store.state.record;
+      const bookId = this.$store.getters.bookId;
+      if (bookId) {
+        part.bookId = bookId;
+        this.fetchBookParts(bookId);
+      }
+      return part; 
     }
   },
   watch: {
@@ -46,11 +52,6 @@ export default {
   },
   created() {
     this.fetchBooks();
-    const bookId = this.$store.getters.bookId;
-    if (bookId) {
-      this.part.bookId = bookId;
-      this.fetchBookParts(bookId);
-    }
   },
   methods: {
     fetchBooks() {

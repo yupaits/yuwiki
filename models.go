@@ -53,7 +53,7 @@ type Part struct {
 	Protected bool   `json:"protected"`
 	Password  string `gorm:"size:60" json:"password"`
 	Owner     uint   `gorm:"not null"`
-	SortCode  uint   `gorm:"unique;not null"`
+	SortCode  uint   `gorm:"not null"`
 }
 
 type Page struct {
@@ -234,6 +234,15 @@ func savePart(part *Part) (bool, error) {
 			return false, err
 		}
 	}
+	var max uint
+	if rows, err := Db.Table("parts").Select(" MAX(parts.sortCode) AS max").Where("parent_id = ?", part.ParentId).Rows(); err == nil {
+		if rows.Next() {
+			if err := rows.Scan(&max); err != nil {
+				log.Fatal("取排序码最大值出错", err)
+			}
+		}
+	}
+	part.SortCode = max + 1
 	var err error
 	if Db.NewRecord(part) {
 		err = Db.Create(part).Error

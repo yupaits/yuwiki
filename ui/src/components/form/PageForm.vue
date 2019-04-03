@@ -6,7 +6,7 @@
           <a-select-option v-for="book in books" :key="book.ID" :value="book.ID"><a-icon type="book" theme="twoTone" :twoToneColor="book.color"/> {{book.name}}</a-select-option>
         </a-select>
       </a-form-item>
-      <a-form-item label="分区" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper">
+      <a-form-item label="分区" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper" required>
         <a-tree-select v-model="page.partId" :treeData="partTree" treeNodeLabelProp="label" allowClear placeholder="请选择所属分区"></a-tree-select>
       </a-form-item>
       <a-form-item label="标题" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper" required>
@@ -20,7 +20,17 @@
 export default {
   computed: {
     page() {
-      return this.$store.getters.record;
+      const page = this.$store.getters.record;
+      const bookId = this.$store.getters.bookId;
+      if (bookId) {
+        page.bookId = bookId;
+        this.fetchBookParts(bookId);
+        const part = this.$store.getters.part;
+        if (part) {
+          this.$set(page, 'partId', part.partType === 0 ? part.ID : undefined);
+        }
+      }
+      return page;
     }
   },
   watch: {
@@ -31,21 +41,11 @@ export default {
   data() {
     return {
       books: [],
-      partTree: [],
-      page: {},
+      partTree: []
     }
   },
   created() {
     this.fetchBooks();
-    const bookId = this.$store.getters.bookId;
-    if (bookId) {
-      this.page.bookId = bookId;
-      this.fetchBookParts(bookId);
-      const part = this.$store.getters.part;
-      if (part) {
-        this.$set(this.page, 'partId', part.partType === 0 ? part.ID : undefined);
-      }
-    }
   },
   methods: {
     fetchBooks() {
@@ -79,9 +79,9 @@ export default {
       if (bookId) {
         this.fetchBookParts(bookId);
       } else {
+        this.page.partId = undefined;
         this.partTree = [];
       }
-      this.$set(this.page, 'partId', undefined);
     }
   }
 }
