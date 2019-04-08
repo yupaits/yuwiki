@@ -58,18 +58,26 @@ type Part struct {
 
 type Page struct {
 	gorm.Model
-	BookId  uint   `gorm:"not null;index" json:"bookId" binding:"required"`
-	PartId  uint   `gorm:"not null;index" json:"partId" binding:"required"`
-	Title   string `gorm:"not null;index" json:"title" binding:"required"`
-	Content string `gorm:"type:text" json:"content"`
-	Tags    *[]Tag `gorm:"many2many:page_tags" json:"tags"`
-	Owner   uint   `gorm:"not null"`
+	BookId    uint   `gorm:"not null;index" json:"bookId" binding:"required"`
+	PartId    uint   `gorm:"not null;index" json:"partId" binding:"required"`
+	Title     string `gorm:"not null;index" json:"title" binding:"required"`
+	Content   string `gorm:"type:text" json:"content"`
+	Tags      *[]Tag `gorm:"many2many:page_tags" json:"tags"`
+	Published bool
+	Owner     uint `gorm:"not null"`
 }
 
 type Tag struct {
 	gorm.Model
 	Name  string  `gorm:"not null;unique" json:"name" binding:"required"`
 	Pages *[]Page `gorm:"many2many:page_tags"`
+}
+
+type HistoricalPage struct {
+	ID        uint   `gorm:"primary_key"`
+	PageId    uint   `gorm:"not null;index"`
+	Content   string `gorm:"type:text"`
+	CreatedAt time.Time
 }
 
 type TreePart struct {
@@ -295,6 +303,13 @@ func getPage(id uint) *Page {
 	if err := Db.Where("id = ? AND owner = ?", id, getUserId()).Find(page).Error; err != nil {
 		log.Fatal(fmt.Sprintf("获取页面失败，pageId: %d", id), err)
 	}
+	//页面处于草稿状态时，返回最近发布的页面内容
+	if !page.Published {
+		historicalPage := &HistoricalPage{}
+		if err := Db.Where("page_id = ?").Order("created_at DESC").Limit(1).Find(historicalPage); err == nil {
+			page.Content = historicalPage.Content
+		}
+	}
 	return page
 }
 
@@ -304,6 +319,17 @@ func savePage(page *Page) bool {
 		err = Db.Create(page).Error
 	} else {
 		err = Db.Save(page).Error
+	}
+	//发布状态页面需要保存页面历史记录
+	if page.Published {
+		historicalPage := &HistoricalPage{
+			PageId:    page.ID,
+			Content:   page.Content,
+			CreatedAt: time.Now(),
+		}
+		if err := Db.Create(historicalPage).Error; err != nil {
+			log.Fatal(fmt.Sprintf("保存页面历史记录失败, pageId: %d", page.ID), err)
+		}
 	}
 	return err == nil
 }

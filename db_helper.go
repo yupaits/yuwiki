@@ -42,6 +42,7 @@ func InitDb(update bool) {
 	book := &Book{}
 	part := &Part{}
 	page := &Page{}
+	historicalPage := &HistoricalPage{}
 	tag := &Tag{}
 	sharedBook := &SharedBook{}
 	if update {
@@ -59,6 +60,11 @@ func InitDb(update bool) {
 			Db.AutoMigrate(page)
 		} else {
 			Db.CreateTable(page)
+		}
+		if Db.HasTable(historicalPage) {
+			Db.AutoMigrate(historicalPage)
+		} else {
+			Db.CreateTable(historicalPage)
 		}
 		if Db.HasTable(tag) {
 			Db.AutoMigrate(tag)
