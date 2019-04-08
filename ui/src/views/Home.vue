@@ -7,7 +7,8 @@
           <span class="ml-1">知识库</span>
         </span>
         <span class="pull-right">
-          <a-input-search class="search-input"></a-input-search>
+          <a-button :icon="menuVisible ? 'menu-unfold' : 'menu-fold'" @click="menuVisible = true"></a-button>
+          <a-input-search class="search-input ml-1"></a-input-search>
           <a-dropdown>
             <a-menu slot="overlay" @click="handleCreate">
               <a-menu-item key="book"><a-icon type="book"/>笔记本</a-menu-item>
@@ -33,67 +34,31 @@
       </a-layout-header>
       <a-layout-content class="layout-content">
         <a-row :gutter="16">
-          <a-col :span="4">
-            <div class="holder">
-              <h2 class="text-title text-bold holder-header">
-                <a-icon type="book"/> 笔记本
-                <a-button size="small" icon="sync" @click="fetchBooks"></a-button>
-                <span class="pull-right" v-if="$store.getters.bookId">
-                  <a-button size="small" icon="edit" class="mr-1" @click="editBook"></a-button>
-                  <a-popconfirm title="确定删除此笔记本吗？" placement="right" @confirm="handleDeleteBook">
-                    <a-button size="small" icon="delete"></a-button>
-                  </a-popconfirm>
-                </span>
-              </h2>
-              <a-spin :spinning="loading.books" class="list">
-                <div v-for="book in books" :key="book.ID" class="book-item" :class="{'active': $store.getters.bookId === book.ID}" @click="selectBook(book.ID)">
-                  <span :style="{fontSize: '18px'}"><a-icon type="book" theme="twoTone" :twoToneColor="book.color"/> {{book.name}}</span>
-                </div>
-              </a-spin>
-            </div>
-          </a-col>
-          <a-col :span="4">
-            <div class="holder">
-              <h2 class="text-title text-bold holder-header">
-                <a-icon type="folder-open"/> 分区
-                <span v-if="$store.getters.partId">
-                  <a-button size="small" icon="sync" class="ml-1" @click="fetchParts($store.getters.bookId)"></a-button>
-                  <span class="pull-right">
-                    <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
-                    <a-popconfirm title="确定删除此分区吗？" placement="right" @confirm="handleDeletePart">
-                      <a-button size="small" icon="delete"></a-button>
-                    </a-popconfirm>
-                  </span>
-                </span>
-              </h2>
-              <a-spin :spinning="loading.parts" class="list">
-                <part-tree :parts="parts"/>
-              </a-spin>
-            </div>
-          </a-col>
           <a-col :span="6">
             <div class="holder">
-              <h2 class="text-title text-bold holder-header">
+              <h3 class="text-title text-bold holder-header">
                 <a-icon type="file-text"/> 页面
-                <span v-if="$store.getters.pageId">
+                <span v-if="$store.getters.partId">
                   <a-button size="small" icon="sync" class="ml-1" @click="fetchPages($store.getters.partId)"></a-button>
-                  <span class="pull-right">
+                  <span class="pull-right" v-if="$store.getters.pageId">
+                    <a-button size="small" icon="form" class="mr-3" @click="toEditor"></a-button>
                     <a-button size="small" icon="edit" class="mr-1" @click="editPage"></a-button>
                     <a-popconfirm title="确定删除此页面吗？" placement="right" @confirm="handleDeletePage">
                       <a-button size="small" icon="delete"></a-button>
                     </a-popconfirm>
                   </span>
                 </span>
-              </h2>
+              </h3>
               <a-spin :spinning="loading.pages" class="list">
                 <div v-for="page in pages" :key="page.ID" class="page-item" :class="{'active': $store.getters.pageId === page.ID}" @click="selectPage(page.ID)">
-                  <span :style="{fontSize: '14px'}"><a-icon type="file-text"/> {{page.title}}</span>
+                  <a-icon type="file-text"/> {{page.title}}
                 </div>
               </a-spin>
             </div>
           </a-col>
-          <a-col :span="10">
-            <div class="holder">
+          <a-col :span="18">
+            <div class="holder preview-holder">
+              <mavon-editor :value="this.viewedPage.content" :toolbarsFlag="false" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
             </div>
           </a-col>
         </a-row>
@@ -102,6 +67,49 @@
         <b>YuWiki</b> ©2019 <b><a href="https://github.com/YupaiTS" target="_blank">YupaiTS</a></b> 版权所有
       </a-layout-footer>
     </a-layout>
+
+    <a-drawer placement="left" :closable="false" @close="menuVisible = false" :visible="menuVisible" width="800">
+      <a-row :gutter="16">
+        <a-col :span="10">
+          <div class="menu-holder">
+            <h3 class="text-title text-bold holder-header">
+              <a-icon type="book"/> 笔记本
+              <a-button size="small" icon="sync" @click="fetchBooks"></a-button>
+              <span class="pull-right" v-if="$store.getters.bookId">
+                <a-button size="small" icon="edit" class="mr-1" @click="editBook"></a-button>
+                <a-popconfirm title="确定删除此笔记本吗？" placement="right" @confirm="handleDeleteBook">
+                  <a-button size="small" icon="delete"></a-button>
+                </a-popconfirm>
+              </span>
+            </h3>
+            <a-spin :spinning="loading.books" class="menu-holder-list">
+              <div v-for="book in books" :key="book.ID" class="book-item" :class="{'active': $store.getters.bookId === book.ID}" @click="selectBook(book.ID)">
+                <a-icon type="book" theme="twoTone" :twoToneColor="book.color"/> {{book.name}}
+              </div>
+            </a-spin>
+          </div>
+        </a-col>
+        <a-col :span="14">
+          <div class="menu-holder">
+            <h3 class="text-title text-bold holder-header">
+              <a-icon type="folder-open"/> 分区
+              <span v-if="$store.getters.bookId">
+                <a-button size="small" icon="sync" class="ml-1" @click="fetchParts($store.getters.bookId)"></a-button>
+                <span class="pull-right" v-if="$store.getters.partId">
+                  <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
+                  <a-popconfirm title="确定删除此分区吗？" placement="right" @confirm="handleDeletePart">
+                    <a-button size="small" icon="delete"></a-button>
+                  </a-popconfirm>
+                </span>
+              </span>
+            </h3>
+            <a-spin :spinning="loading.parts" class="menu-holder-list">
+              <part-tree :parts="parts"/>
+            </a-spin>
+          </div>
+        </a-col>
+      </a-row>
+    </a-drawer>
 
     <a-modal :visible.sync="modal.visible" @cancel="closeModal" @ok="modal.ok">
       <template slot="title">
@@ -116,13 +124,10 @@
   import BookForm from '../components/form/BookForm'
   import PartForm from '../components/form/PartForm'
   import PageForm from '../components/form/PageForm'
-  import PageEditor from '../components/PageEditor'
-  import PartTree from "../components/PartTree";
-
+  import PartTree from "../components/PartTree"
   export default {
     components: {
-      PartTree,
-      PageEditor
+      PartTree
     },
     data() {
       return {
@@ -136,6 +141,7 @@
           pages: false,
           pageView: false
         },
+        menuVisible: true,
         modalVisible: false,
         modal: {
           type: undefined,
@@ -187,6 +193,13 @@
     },
     created() {
       this.fetchBooks();
+      this.$eventBus.$on('selectPart', this.selectPart);
+      if (this.$store.getters.pageId) {
+        this.menuVisible = false;
+        this.fetchParts(this.$store.getters.bookId);
+        this.fetchPages(this.$store.getters.partId);
+        this.viewPage();
+      }
     },
     methods: {
       fetchBooks() {
@@ -249,8 +262,14 @@
         this.$store.dispatch('setBookId', bookId);
         this.$store.dispatch('setPartId', undefined);
         this.$store.dispatch('setPageId', undefined);
+        this.pages = [];
         this.viewedPage = {};
         this.fetchParts(bookId);
+      },
+      selectPart(partId) {
+        this.$store.dispatch('setPageId', undefined);
+        this.viewedPage = {};
+        this.fetchPages(partId);
       },
       selectPage(pageId) {
         this.$store.dispatch('setPageId', pageId);
@@ -276,6 +295,16 @@
       },
       editPage() {
         this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.viewedPage)));
+        this.modal = {
+          type: 'modify',
+          key: 'page',
+          visible: true,
+          ok: this.handleEditPage
+        };
+      },
+      toEditor() {
+        this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.viewedPage)));
+        this.$router.push('/page/edit');
       },
       handleAddBook() {
         this.$api.addBook(this.$store.getters.record).then(() => {
@@ -319,7 +348,7 @@
         });
       },
       handleEditPage() {
-        this.$api.editPage(this.$store.getters.record).then(() => {
+        this.$api.updatePage(this.$store.getters.record).then(() => {
           this.$message.success(this.$messages.result.updateSuccess);
           this.fetchPages(this.$store.getters.partId);
           this.closeModal();
@@ -387,6 +416,18 @@
   height: calc(100vh - 133px);
   padding: 0 50px;
 }
+.menu-holder {
+  height: calc(100vh - 48px);
+  padding: 8px 16px;
+  border: 1px solid #f5f5f5;
+  border-radius: 4px;
+  background: #fff;
+}
+.menu-holder-list {
+  height: calc(100vh - 102px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
 .holder {
   height: calc(100vh - 133px);
   padding: 8px 16px;
@@ -416,5 +457,12 @@
   background: #91d5ff;
   font-weight: bold;
   color: #262626;
+}
+.preview-holder {
+  padding: 2px;
+}
+.page-preview {
+  z-index: 0;
+  height: 100%;
 }
 </style>

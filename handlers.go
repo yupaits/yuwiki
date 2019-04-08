@@ -127,6 +127,17 @@ func savePageHandler(c *gin.Context) {
 	}
 }
 
+func editPageHandler(c *gin.Context) {
+	page := &Page{}
+	if err := c.ShouldBind(page); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if editPage(page) {
+		Result(c, Ok())
+	} else {
+		Result(c, CodeFail(UpdateFail))
+	}
+}
+
 func deletePageHandler(c *gin.Context) {
 	if pageId, err := strconv.ParseUint(c.Param("pageId"), 10, 32); err != nil {
 		Result(c, CodeFail(ParamsError))

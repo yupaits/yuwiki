@@ -320,18 +320,26 @@ func savePage(page *Page) bool {
 	} else {
 		err = Db.Save(page).Error
 	}
-	//发布状态页面需要保存页面历史记录
-	if page.Published {
-		historicalPage := &HistoricalPage{
-			PageId:    page.ID,
-			Content:   page.Content,
-			CreatedAt: time.Now(),
-		}
-		if err := Db.Create(historicalPage).Error; err != nil {
-			log.Fatal(fmt.Sprintf("保存页面历史记录失败, pageId: %d", page.ID), err)
-		}
-	}
 	return err == nil
+}
+
+func editPage(page *Page) bool {
+	if savePage(page) {
+		//发布状态页面需要保存页面历史记录
+		if page.Published {
+			historicalPage := &HistoricalPage{
+				PageId:    page.ID,
+				Content:   page.Content,
+				CreatedAt: time.Now(),
+			}
+			if err := Db.Create(historicalPage).Error; err != nil {
+				log.Fatal(fmt.Sprintf("保存页面历史记录失败, pageId: %d", page.ID), err)
+			}
+		}
+		return true
+	} else {
+		return false
+	}
 }
 
 func deletePage(id uint) bool {

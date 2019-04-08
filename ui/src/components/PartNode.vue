@@ -22,6 +22,8 @@
         let part = Object.assign({}, this.option);
         delete part.SubParts;
         this.$store.dispatch('setPart', part);
+        this.$emit('select', partId);
+        this.$eventBus.$emit('selectPart', partId);
       }
     }
   }
@@ -29,7 +31,6 @@
 
 <style scoped>
 .part-item {
-  font-size: 16px;
   line-height: 32px;
   padding: 0 8px;
   border-radius: 4px;

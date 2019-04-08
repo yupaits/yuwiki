@@ -40,8 +40,11 @@ export default {
   editPart(part) {
     return client.put(`/parts/${part.ID}`, part);
   },
-  editPage(page) {
+  updatePage(page) {
     return client.put(`/pages/${page.ID}`, page);
+  },
+  editPage(page) {
+    return client.put(`/pages/${page.ID}/edit`, page);
   },
   deleteBook(bookId) {
     return client.delete(`/books/${bookId}`);

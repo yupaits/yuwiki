@@ -21,6 +21,8 @@ Vue.prototype.$api = api
 Vue.prototype.$messages = messages
 Vue.prototype.$styles = styles
 
+Vue.prototype.$eventBus = new Vue()
+
 new Vue({
   router,
   store,

@@ -67,6 +67,7 @@ func Run() {
 		pages.GET("/:pageId", getPageHandler)
 		pages.POST("", savePageHandler)
 		pages.PUT("/:pageId", savePageHandler)
+		pages.PUT("/:pageId/edit", editPageHandler)
 		pages.DELETE("/:pageId", deletePageHandler)
 	}
 
