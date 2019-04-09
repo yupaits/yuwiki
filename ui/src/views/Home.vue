@@ -7,7 +7,7 @@
           <span class="ml-1">知识库</span>
         </span>
         <span class="pull-right">
-          <a-button :icon="menuVisible ? 'menu-unfold' : 'menu-fold'" @click="menuVisible = true"></a-button>
+          <a-button :icon="menuVisible ? 'menu-fold' : 'menu-unfold'" @click="menuVisible = !menuVisible"></a-button>
           <a-input-search class="search-input ml-1"></a-input-search>
           <a-dropdown>
             <a-menu slot="overlay" @click="handleCreate">
@@ -34,6 +34,57 @@
       </a-layout-header>
       <a-layout-content class="layout-content">
         <a-row :gutter="16">
+          <div v-if="menuVisible">
+            <a-col :span="4">
+              <div class="holder">
+                <h3 class="text-title text-bold holder-header">
+                  <a-icon type="book"/> 笔记本
+                  <a-button size="small" icon="sync" @click="fetchBooks"></a-button>
+                  <span class="pull-right" v-if="$store.getters.bookId">
+                    <a-button size="small" icon="edit" class="mr-1" @click="editBook"></a-button>
+                    <a-popconfirm title="确定删除此笔记本吗？" placement="right" @confirm="handleDeleteBook">
+                      <a-button size="small" icon="delete"></a-button>
+                    </a-popconfirm>
+                  </span>
+                </h3>
+                <a-spin :spinning="loading.books" class="list">
+                  <div v-for="book in books" :key="book.ID" class="book-item" :class="{'active': $store.getters.bookId === book.ID}" @click="selectBook(book.ID)">
+                    <a-icon type="book" theme="twoTone" :twoToneColor="book.color"/> {{book.name}}
+                  </div>
+                </a-spin>
+              </div>
+            </a-col>
+            <a-col :span="4">
+              <div class="holder">
+                <h3 class="text-title text-bold holder-header">
+                  <a-icon type="folder-open"/> 分区
+                  <span v-if="$store.getters.bookId">
+                    <a-button size="small" icon="sync" class="ml-1" @click="fetchParts($store.getters.bookId)"></a-button>
+                    <span class="pull-right" v-if="$store.getters.partId">
+                      <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
+                      <a-popconfirm title="确定删除此分区吗？" placement="right" @confirm="handleDeletePart">
+                        <a-button size="small" icon="delete"></a-button>
+                      </a-popconfirm>
+                    </span>
+                  </span>
+                </h3>
+                <a-spin :spinning="loading.parts" class="list">
+                  <part-tree :parts="parts"/>
+                </a-spin>
+              </div>
+            </a-col>
+          </div>
+          <div v-else>
+            <a-col :span="1">
+              <div class="holder fold-holder" @click="menuVisible = true">
+                <h3 class="text-title text-bold holder-header">
+                  <a-icon type="book"/> 笔记本
+                  <a-divider></a-divider>
+                  <a-icon type="folder-open"/> 分区
+                </h3>
+              </div>
+            </a-col>
+          </div>
           <a-col :span="6">
             <div class="holder">
               <h3 class="text-title text-bold holder-header">
@@ -56,7 +107,7 @@
               </a-spin>
             </div>
           </a-col>
-          <a-col :span="18">
+          <a-col :span="menuVisible ? 10 : 17">
             <div class="holder preview-holder">
               <mavon-editor :value="this.viewedPage.content" :toolbarsFlag="false" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
             </div>
@@ -67,49 +118,6 @@
         <b>YuWiki</b> ©2019 <b><a href="https://github.com/YupaiTS" target="_blank">YupaiTS</a></b> 版权所有
       </a-layout-footer>
     </a-layout>
-
-    <a-drawer placement="left" :closable="false" @close="menuVisible = false" :visible="menuVisible" width="800">
-      <a-row :gutter="16">
-        <a-col :span="10">
-          <div class="menu-holder">
-            <h3 class="text-title text-bold holder-header">
-              <a-icon type="book"/> 笔记本
-              <a-button size="small" icon="sync" @click="fetchBooks"></a-button>
-              <span class="pull-right" v-if="$store.getters.bookId">
-                <a-button size="small" icon="edit" class="mr-1" @click="editBook"></a-button>
-                <a-popconfirm title="确定删除此笔记本吗？" placement="right" @confirm="handleDeleteBook">
-                  <a-button size="small" icon="delete"></a-button>
-                </a-popconfirm>
-              </span>
-            </h3>
-            <a-spin :spinning="loading.books" class="menu-holder-list">
-              <div v-for="book in books" :key="book.ID" class="book-item" :class="{'active': $store.getters.bookId === book.ID}" @click="selectBook(book.ID)">
-                <a-icon type="book" theme="twoTone" :twoToneColor="book.color"/> {{book.name}}
-              </div>
-            </a-spin>
-          </div>
-        </a-col>
-        <a-col :span="14">
-          <div class="menu-holder">
-            <h3 class="text-title text-bold holder-header">
-              <a-icon type="folder-open"/> 分区
-              <span v-if="$store.getters.bookId">
-                <a-button size="small" icon="sync" class="ml-1" @click="fetchParts($store.getters.bookId)"></a-button>
-                <span class="pull-right" v-if="$store.getters.partId">
-                  <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
-                  <a-popconfirm title="确定删除此分区吗？" placement="right" @confirm="handleDeletePart">
-                    <a-button size="small" icon="delete"></a-button>
-                  </a-popconfirm>
-                </span>
-              </span>
-            </h3>
-            <a-spin :spinning="loading.parts" class="menu-holder-list">
-              <part-tree :parts="parts"/>
-            </a-spin>
-          </div>
-        </a-col>
-      </a-row>
-    </a-drawer>
 
     <a-modal :visible.sync="modal.visible" @cancel="closeModal" @ok="modal.ok">
       <template slot="title">
@@ -125,6 +133,7 @@
   import PartForm from '../components/form/PartForm'
   import PageForm from '../components/form/PageForm'
   import PartTree from "../components/PartTree"
+import { unlink } from 'fs';
   export default {
     components: {
       PartTree
@@ -207,7 +216,6 @@
         this.$api.getBooks().then(res => {
           this.books = res.data;
           this.loading.books = false;
-          return Promise.resolve();
         }).catch(() => {
           this.loading.books = false;
         });
@@ -226,7 +234,6 @@
         this.$api.getPages(partId).then(res => {
           this.pages = res.data;
           this.loading.pages = false;
-          return Promise.resolve();
         }).catch(() => {
           this.loading.pages = false;
         });
@@ -264,16 +271,22 @@
         this.$store.dispatch('setPageId', undefined);
         this.pages = [];
         this.viewedPage = {};
-        this.fetchParts(bookId);
+        if (bookId) {
+          this.fetchParts(bookId);
+        }
       },
       selectPart(partId) {
         this.$store.dispatch('setPageId', undefined);
         this.viewedPage = {};
-        this.fetchPages(partId);
+        if (partId) {
+          this.fetchPages(partId);
+        }
       },
       selectPage(pageId) {
         this.$store.dispatch('setPageId', pageId);
-        this.viewPage();
+        if (pageId) {
+          this.viewPage();
+        }
       },
       editBook() {
         this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.selectedBook)));
@@ -357,23 +370,22 @@
       handleDeleteBook() {
         this.$api.deleteBook(this.$store.getters.bookId).then(() => {
           this.$message.success(this.$messages.result.deleteSuccess);
-          this.fetchBooks().then(() => {
-            this.selectBook(undefined);
-          });
+          this.fetchBooks();
+          this.selectBook(undefined);
         });
       },
       handleDeletePart() {
         this.$api.deletePart(this.$store.getters.partId).then(() => {
           this.$message.success(this.$messages.result.deleteSuccess);
           this.fetchParts(this.$store.getters.bookId);
+          this.selectPart(undefined);
         });
       },
       handleDeletePage() {
         this.$api.deletePage(this.$store.getters.pageId).then(() => {
           this.$message.success(this.$messages.result.deleteSuccess);
-          this.fetchPages(this.$store.getters.partId).then(() => {
-            this.selectPage(undefined);
-          });
+          this.fetchPages(this.$store.getters.partId);
+          this.selectPage(undefined);
         });
       }
     }
@@ -416,24 +428,15 @@
   height: calc(100vh - 133px);
   padding: 0 50px;
 }
-.menu-holder {
-  height: calc(100vh - 48px);
-  padding: 8px 16px;
-  border: 1px solid #f5f5f5;
-  border-radius: 4px;
-  background: #fff;
-}
-.menu-holder-list {
-  height: calc(100vh - 102px);
-  overflow-x: hidden;
-  overflow-y: auto;
-}
 .holder {
   height: calc(100vh - 133px);
   padding: 8px 16px;
   border: 1px solid #f5f5f5;
   border-radius: 4px;
   background: #fff;
+}
+.fold-holder {
+  cursor: pointer;
 }
 .holder-header {
   line-height: 28px;

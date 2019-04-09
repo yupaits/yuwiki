@@ -95,7 +95,7 @@ func currentUser() (*User, error) {
 	userId := getUserId()
 	user := &User{}
 	if err := Db.Where("id = ?", userId).Find(user).Error; err != nil {
-		log.Fatal("获取当前用户信息失败", err)
+		log.Fatal("获取当前用户信息失败 ", err)
 		return user, err
 	}
 	return user, nil
@@ -160,7 +160,7 @@ func getBooks() *[]Book {
 	books := &[]Book{}
 	owner := getUserId()
 	if err := Db.Where("owner = ?", owner).Find(books).Error; err != nil {
-		log.Fatal("获取笔记本清单失败", err)
+		log.Fatal("获取笔记本清单失败 ", err)
 	}
 	return books
 }
@@ -189,7 +189,7 @@ func deleteBook(id uint) bool {
 func getBookParts(bookId uint) *[]TreePart {
 	parts := &[]Part{}
 	if err := Db.Where("book_id = ? AND parent_Id = 0 AND owner = ?", bookId, getUserId()).Find(parts).Error; err != nil {
-		log.Fatal(fmt.Sprintf("获取笔记本分区清单失败，bookId: %d", bookId), err)
+		log.Fatal(fmt.Sprintf("获取笔记本分区清单失败，bookId: %d ", bookId), err)
 	}
 	var treeParts []TreePart
 	for _, part := range *parts {
@@ -208,7 +208,7 @@ func getBookParts(bookId uint) *[]TreePart {
 func getSubParts(parentId uint) *[]TreePart {
 	parts := &[]Part{}
 	if err := Db.Where("parent_id = ?", parentId).Find(parts).Error; err != nil {
-		log.Fatal(fmt.Sprintf("获取笔记本分区子分区列表失败，parentId: %d", parentId), err)
+		log.Fatal(fmt.Sprintf("获取笔记本分区子分区列表失败，parentId: %d ", parentId), err)
 	}
 	var subParts []TreePart
 	for _, part := range *parts {
@@ -227,7 +227,7 @@ func getSubParts(parentId uint) *[]TreePart {
 func getPart(partId uint) *Part {
 	part := &Part{}
 	if err := Db.Where("id = ? AND owner = ?", partId, getUserId()).Find(part).Error; err != nil {
-		log.Fatal(fmt.Sprintf("获取分区信息失败，partId: %d", partId), err)
+		log.Fatal(fmt.Sprintf("获取分区信息失败，partId: %d ", partId), err)
 	}
 	return part
 }
@@ -246,7 +246,7 @@ func savePart(part *Part) (bool, error) {
 	if rows, err := Db.Table("parts").Select(" MAX(parts.sortCode) AS max").Where("parent_id = ?", part.ParentId).Rows(); err == nil {
 		if rows.Next() {
 			if err := rows.Scan(&max); err != nil {
-				log.Fatal("取排序码最大值出错", err)
+				log.Fatal("取排序码最大值出错 ", err)
 			}
 		}
 	}
@@ -290,7 +290,7 @@ func deletePart(id uint) bool {
 func getPartPages(partId uint) *[]Page {
 	pages := &[]Page{}
 	if err := Db.Where("part_id = ? AND owner = ?", partId, getUserId()).Find(pages).Error; err != nil {
-		log.Fatal(fmt.Sprintf("获取分区页面清单失败，partId: %d", partId), err)
+		log.Fatal(fmt.Sprintf("获取分区页面清单失败，partId: %d ", partId), err)
 	}
 	for _, page := range *pages {
 		page.Content = ""
@@ -301,7 +301,7 @@ func getPartPages(partId uint) *[]Page {
 func getPage(id uint) *Page {
 	page := &Page{}
 	if err := Db.Where("id = ? AND owner = ?", id, getUserId()).Find(page).Error; err != nil {
-		log.Fatal(fmt.Sprintf("获取页面失败，pageId: %d", id), err)
+		log.Fatal(fmt.Sprintf("获取页面失败，pageId: %d ", id), err)
 	}
 	//页面处于草稿状态时，返回最近发布的页面内容
 	if !page.Published {
@@ -333,7 +333,7 @@ func editPage(page *Page) bool {
 				CreatedAt: time.Now(),
 			}
 			if err := Db.Create(historicalPage).Error; err != nil {
-				log.Fatal(fmt.Sprintf("保存页面历史记录失败, pageId: %d", page.ID), err)
+				log.Fatal(fmt.Sprintf("保存页面历史记录失败, pageId: %d ", page.ID), err)
 			}
 		}
 		return true
