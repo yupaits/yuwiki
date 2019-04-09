@@ -7,7 +7,7 @@
           <span class="ml-1">知识库</span>
         </span>
         <span class="pull-right">
-          <a-button :icon="menuVisible ? 'menu-fold' : 'menu-unfold'" @click="menuVisible = !menuVisible"></a-button>
+          <a-button :icon="$store.getters.menuVisible ? 'menu-fold' : 'menu-unfold'" @click="toggleMenuVisible"></a-button>
           <a-input-search class="search-input ml-1"></a-input-search>
           <a-dropdown>
             <a-menu slot="overlay" @click="handleCreate">
@@ -34,7 +34,7 @@
       </a-layout-header>
       <a-layout-content class="layout-content">
         <a-row :gutter="16">
-          <div v-if="menuVisible">
+          <div v-if="$store.getters.menuVisible">
             <a-col :span="4">
               <div class="holder">
                 <h3 class="text-title text-bold holder-header">
@@ -76,7 +76,7 @@
           </div>
           <div v-else>
             <a-col :span="1">
-              <div class="holder fold-holder" @click="menuVisible = true">
+              <div class="holder fold-holder" @click="$store.dispatch('setMenuVisible', true)">
                 <h3 class="text-title text-bold holder-header">
                   <a-icon type="book"/> 笔记本
                   <a-divider></a-divider>
@@ -107,7 +107,7 @@
               </a-spin>
             </div>
           </a-col>
-          <a-col :span="menuVisible ? 10 : 17">
+          <a-col :span="$store.getters.menuVisible ? 10 : 17">
             <div class="holder preview-holder">
               <mavon-editor :value="this.viewedPage.content" :toolbarsFlag="false" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
             </div>
@@ -150,7 +150,6 @@ import { unlink } from 'fs';
           pages: false,
           pageView: false
         },
-        menuVisible: true,
         modalVisible: false,
         modal: {
           type: undefined,
@@ -204,7 +203,6 @@ import { unlink } from 'fs';
       this.fetchBooks();
       this.$eventBus.$on('selectPart', this.selectPart);
       if (this.$store.getters.pageId) {
-        this.menuVisible = false;
         this.fetchParts(this.$store.getters.bookId);
         this.fetchPages(this.$store.getters.partId);
         this.viewPage();
@@ -238,9 +236,12 @@ import { unlink } from 'fs';
           this.loading.pages = false;
         });
       },
+      toggleMenuVisible() {
+        this.$store.dispatch('setMenuVisible', !this.$store.getters.menuVisible);
+      },
       viewPage() {
         this.loading.pageView = true;
-        this.$api.viewPage(this.$store.getters.pageId).then(res => {
+        this.$api.viewPage(this.$store.getters.pageId, false).then(res => {
           this.viewedPage = res.data;
           this.loading.pageView = false;
         }).catch(() => {
@@ -316,7 +317,11 @@ import { unlink } from 'fs';
         };
       },
       toEditor() {
-        this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.viewedPage)));
+        this.$api.viewPage(this.$store.getters.pageId, true).then(res => {
+          const page = res.data;
+          this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(page)));
+          this.loading.pageView = false;
+        });
         this.$router.push('/page/edit');
       },
       handleAddBook() {

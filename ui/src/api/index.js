@@ -22,8 +22,11 @@ export default {
   getUserInfo() {
     return client.get('/user');
   },
-  viewPage(pageId) {
-    return client.get(`/pages/${pageId}`);
+  viewPage(pageId, editable) {
+    return client.get(`/pages/${pageId}?editable=${editable}`);
+  },
+  getHistoricalPages(pageId) {
+    return client.get(`/pages/${pageId}/history`);
   },
   addBook(book) {
     return client.post('/books', book);

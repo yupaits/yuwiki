@@ -109,11 +109,13 @@ func deletePartHandler(c *gin.Context) {
 }
 
 func getPageHandler(c *gin.Context) {
-	pageId, err := strconv.ParseUint(c.Param("pageId"), 10, 32)
-	if err != nil {
+	pageId, pageIdErr := strconv.ParseUint(c.Param("pageId"), 10, 32)
+	editable, editableErr := strconv.ParseBool(c.DefaultQuery("editable", "false"))
+	if pageIdErr != nil || editableErr != nil {
 		Result(c, CodeFail(ParamsError))
+	} else {
+		Result(c, OkData(getPage(uint(pageId), editable)))
 	}
-	Result(c, OkData(getPage(uint(pageId))))
 }
 
 func savePageHandler(c *gin.Context) {
@@ -145,6 +147,14 @@ func deletePageHandler(c *gin.Context) {
 		Result(c, Ok())
 	} else {
 		Result(c, CodeFail(DeleteFail))
+	}
+}
+
+func getHistoricalPagesHandler(c *gin.Context) {
+	if pageId, err := strconv.ParseUint(c.Param("pageId"), 10, 32); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else {
+		Result(c, OkData(getHistoricalPages(uint(pageId))))
 	}
 }
 

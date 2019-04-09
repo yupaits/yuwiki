@@ -78,6 +78,7 @@ type HistoricalPage struct {
 	PageId    uint   `gorm:"not null;index"`
 	Content   string `gorm:"type:text"`
 	CreatedAt time.Time
+	Owner     uint `gorm:"not null"`
 }
 
 type TreePart struct {
@@ -158,8 +159,7 @@ func modifyPassword(modify *PasswordModify) (bool, string) {
 
 func getBooks() *[]Book {
 	books := &[]Book{}
-	owner := getUserId()
-	if err := Db.Where("owner = ?", owner).Find(books).Error; err != nil {
+	if err := Db.Where("owner = ?", getUserId()).Find(books).Error; err != nil {
 		log.Fatal("获取笔记本清单失败 ", err)
 	}
 	return books
@@ -298,15 +298,15 @@ func getPartPages(partId uint) *[]Page {
 	return pages
 }
 
-func getPage(id uint) *Page {
+func getPage(id uint, editable bool) *Page {
 	page := &Page{}
 	if err := Db.Where("id = ? AND owner = ?", id, getUserId()).Find(page).Error; err != nil {
 		log.Fatal(fmt.Sprintf("获取页面失败，pageId: %d ", id), err)
 	}
 	//页面处于草稿状态时，返回最近发布的页面内容
-	if !page.Published {
+	if !page.Published && !editable {
 		historicalPage := &HistoricalPage{}
-		if err := Db.Where("page_id = ?").Order("created_at DESC").Limit(1).Find(historicalPage); err == nil {
+		if err := Db.Where("page_id = ?", page.ID).Order("created_at DESC").Limit(1).Find(historicalPage).Error; err == nil {
 			page.Content = historicalPage.Content
 		}
 	}
@@ -331,6 +331,7 @@ func editPage(page *Page) bool {
 				PageId:    page.ID,
 				Content:   page.Content,
 				CreatedAt: time.Now(),
+				Owner:     getUserId(),
 			}
 			if err := Db.Create(historicalPage).Error; err != nil {
 				log.Fatal(fmt.Sprintf("保存页面历史记录失败, pageId: %d ", page.ID), err)
@@ -345,6 +346,14 @@ func editPage(page *Page) bool {
 func deletePage(id uint) bool {
 	err := Db.Where("id = ? AND owner = ?", id, getUserId()).Delete(Page{}).Error
 	return err == nil
+}
+
+func getHistoricalPages(pageId uint) *[]HistoricalPage {
+	historicalPages := &[]HistoricalPage{}
+	if err := Db.Where("page_id = ? AND owner = ?", pageId, getUserId()).Find(historicalPages).Error; err != nil {
+		log.Fatal(fmt.Sprintf("获取页面历史记录失败，pageId: %d ", pageId), err)
+	}
+	return historicalPages
 }
 
 func getSharedBooks() *[]Book {

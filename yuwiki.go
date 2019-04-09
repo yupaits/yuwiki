@@ -65,6 +65,7 @@ func Run() {
 	pages := r.Group("/pages")
 	{
 		pages.GET("/:pageId", getPageHandler)
+		pages.GET("/:pageId/history", getHistoricalPagesHandler)
 		pages.POST("", savePageHandler)
 		pages.PUT("/:pageId", savePageHandler)
 		pages.PUT("/:pageId/edit", editPageHandler)

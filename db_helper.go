@@ -77,7 +77,7 @@ func InitDb(update bool) {
 			Db.CreateTable(sharedBook)
 		}
 	} else {
-		Db.DropTableIfExists(book, part, page, tag, sharedBook)
-		Db.CreateTable(book, part, page, tag, sharedBook)
+		Db.DropTableIfExists(book, part, page, historicalPage, tag, sharedBook)
+		Db.CreateTable(book, part, page, historicalPage, tag, sharedBook)
 	}
 }

@@ -12,7 +12,8 @@ export default new Vuex.Store({
     bookId: undefined,
     partId: undefined,
     pageId: undefined,
-    part: {}
+    part: {},
+    menuVisible: true
   },
   getters: {
     user(state) {
@@ -32,6 +33,9 @@ export default new Vuex.Store({
     },
     part(state) {
       return state.part;
+    },
+    menuVisible(state) {
+      return state.menuVisible;
     }
   },
   mutations: {
@@ -52,6 +56,9 @@ export default new Vuex.Store({
     },
     setPart(state, part) {
       state.part = part;
+    },
+    setMenuVisible(state, visible) {
+      state.menuVisible = visible;
     }
   },
   actions: {
@@ -72,6 +79,9 @@ export default new Vuex.Store({
     },
     setPart({commit}, part) {
       commit('setPart', part);
+    },
+    setMenuVisible({commit}, visible) {
+      commit('setMenuVisible', visible);
     }
   }
 })
