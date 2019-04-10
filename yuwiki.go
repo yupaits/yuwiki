@@ -72,6 +72,11 @@ func Run() {
 		pages.DELETE("/:pageId", deletePageHandler)
 	}
 
+	tags := r.Group("/tags")
+	{
+		tags.GET("", getTagsHandler)
+	}
+
 	user := r.Group("/user")
 	{
 		user.GET("", getUserInfoHandler)

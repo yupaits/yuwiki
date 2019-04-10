@@ -28,6 +28,9 @@ export default {
   getHistoricalPages(pageId) {
     return client.get(`/pages/${pageId}/history`);
   },
+  getTags() {
+    return client.get(`/tags`);
+  },
   addBook(book) {
     return client.post('/books', book);
   },

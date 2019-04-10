@@ -7,7 +7,9 @@
         </div>
         <div>
           <h4>页面标签：</h4>
-          <a-input placeholder="请选择或填写标签"></a-input>
+          <a-select v-model="viewedPage.tags" mode="tags" placeholder="请选择或填写标签" :style="{width: '100%'}">
+            <a-select-option v-for="tag in tags" :key="tag.ID" :value="tag.name">{{tag.name}}</a-select-option>
+          </a-select>
         </div>
         <div class="mt-3">
           <h4>页面历史：</h4>
@@ -51,13 +53,25 @@ dayjs.locale('zh-cn')
 export default {
   computed: {
     viewedPage() {
-      return this.$store.getters.record;
+      const viewedPage = this.$store.getters.record;
+      if (!viewedPage.tags) {
+        viewedPage.tags = [];
+      }
+      return viewedPage;
+    },
+    pageTags() {
+      const tags = this.viewedPage.tags;
+      if (tags && tags.length > 0) {
+        return tags.map(tag => tag.name);
+      }
+      return [];
     }
   },
   data() {
     return {
       dayjs,
       toolbars: config.editor.toolbars,
+      tags: [],
       historyLoading: false,
       historicalPages: [],
       noHistory: false,
@@ -66,8 +80,14 @@ export default {
   },
   created() {
     this.fetchHistoricalPages();
+    this.fetchTags();
   },
   methods: {
+    fetchTags() {
+      this.$api.getTags().then(res => {
+        this.tags = res.data;
+      });
+    },
     fetchHistoricalPages() {
       this.historyLoading = true;
       const pageId = this.$store.getters.pageId;
@@ -93,7 +113,7 @@ export default {
         this.$refs.editor.d_value = this.viewedPage.content;
         this.historyId = undefined;
       } else {
-        this.$refs.editor.d_value = page.Content;
+        this.$refs.editor.d_value = page.content;
         this.historyId = page.ID;
       }
     },

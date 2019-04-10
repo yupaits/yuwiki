@@ -58,32 +58,41 @@ type Part struct {
 
 type Page struct {
 	gorm.Model
-	BookId    uint   `gorm:"not null;index" json:"bookId" binding:"required"`
-	PartId    uint   `gorm:"not null;index" json:"partId" binding:"required"`
-	Title     string `gorm:"not null;index" json:"title" binding:"required"`
+	BookId    uint   `gorm:"not null;index" json:"bookId"`
+	PartId    uint   `gorm:"not null;index" json:"partId"`
+	Title     string `gorm:"not null;index" json:"title"`
 	Content   string `gorm:"type:text" json:"content"`
-	Tags      *[]Tag `gorm:"many2many:page_tags" json:"tags"`
-	Published bool
-	Owner     uint `gorm:"not null"`
+	Published bool   `json:"published"`
+	Owner     uint   `gorm:"not null" json:"owner"`
 }
 
 type Tag struct {
 	gorm.Model
-	Name  string  `gorm:"not null;unique" json:"name" binding:"required"`
-	Pages *[]Page `gorm:"many2many:page_tags"`
+	Name string `gorm:"not null;unique" json:"name"`
+}
+
+type PageTag struct {
+	gorm.Model
+	PageId uint `gorm:"not null;index"`
+	TagId  uint `gorm:"not null;index"`
 }
 
 type HistoricalPage struct {
 	ID        uint   `gorm:"primary_key"`
-	PageId    uint   `gorm:"not null;index"`
-	Content   string `gorm:"type:text"`
+	PageId    uint   `gorm:"not null;index" json:"page_id"`
+	Content   string `gorm:"type:text" json:"content"`
 	CreatedAt time.Time
-	Owner     uint `gorm:"not null"`
+	Owner     uint `gorm:"not null" json:"owner"`
 }
 
 type TreePart struct {
 	Part
 	SubParts *[]TreePart
+}
+
+type PageVo struct {
+	Page
+	Tags []string `json:"tags"`
 }
 
 type SharedBook struct {
@@ -287,22 +296,28 @@ func deletePart(id uint) bool {
 	return err == nil
 }
 
-func getPartPages(partId uint) *[]Page {
+func getPartPages(partId uint) *[]PageVo {
 	pages := &[]Page{}
 	if err := Db.Where("part_id = ? AND owner = ?", partId, getUserId()).Find(pages).Error; err != nil {
 		log.Fatal(fmt.Sprintf("获取分区页面清单失败，partId: %d ", partId), err)
 	}
+	var pageVos []PageVo
 	for _, page := range *pages {
+		pageVo := PageVo{Page: page}
 		page.Content = ""
+		setPageTags(&pageVo)
+		pageVos = append(pageVos, pageVo)
 	}
-	return pages
+	return &pageVos
 }
 
-func getPage(id uint, editable bool) *Page {
+func getPage(id uint, editable bool) *PageVo {
 	page := &Page{}
 	if err := Db.Where("id = ? AND owner = ?", id, getUserId()).Find(page).Error; err != nil {
 		log.Fatal(fmt.Sprintf("获取页面失败，pageId: %d ", id), err)
 	}
+	pageVo := PageVo{Page: *page}
+	setPageTags(&pageVo)
 	//页面处于草稿状态时，返回最近发布的页面内容
 	if !page.Published && !editable {
 		historicalPage := &HistoricalPage{}
@@ -310,31 +325,94 @@ func getPage(id uint, editable bool) *Page {
 			page.Content = historicalPage.Content
 		}
 	}
-	return page
+	return &pageVo
 }
 
-func savePage(page *Page) bool {
+//填充页面标签信息
+func setPageTags(pageVo *PageVo) {
+	var pageTags []PageTag
+	if err := Db.Where("page_id = ?", pageVo.ID).Find(&pageTags).Error; err != nil {
+		log.Fatal(fmt.Sprintf("获取页面标签列表失败，pageId: %d ", pageVo.ID), err)
+	} else if len(pageTags) > 0 {
+		var tagIds []uint
+		for _, pageTag := range pageTags {
+			tagIds = append(tagIds, pageTag.TagId)
+		}
+		tags := &[]Tag{}
+		if err := Db.Where("id in (?)", tagIds).Find(tags).Error; err != nil {
+			log.Fatal(fmt.Sprintf("获取标签信息失败，tagIds: %v ", tagIds), err)
+		}
+		pageVo.Tags = []string{}
+		for _, tag := range *tags {
+			pageVo.Tags = append(pageVo.Tags, tag.Name)
+		}
+	}
+}
+
+func savePage(pageDto *PageDto) bool {
+	page := &Page{
+		Model:     gorm.Model{ID: pageDto.ID},
+		BookId:    pageDto.BookId,
+		PartId:    pageDto.PartId,
+		Title:     pageDto.Title,
+		Content:   pageDto.Content,
+		Published: pageDto.Published,
+	}
 	var err error
 	if Db.NewRecord(page) {
 		err = Db.Create(page).Error
 	} else {
 		err = Db.Save(page).Error
 	}
+	var tagErr error
+	if len(pageDto.Tags) > 0 {
+		//更新页面标签
+		var tagIds []uint
+		for _, tagName := range pageDto.Tags {
+			tag := &Tag{}
+			Db.Where("name = ?", tagName).First(tag)
+			if tag.ID == 0 {
+				//创建不存在的标签
+				tag.Name = tagName
+				Db.Create(tag)
+			}
+			tagIds = append(tagIds, tag.ID)
+			pageTag := &PageTag{}
+			Db.Where("page_id = ? AND tag_id = ?", page.ID, tag.ID).First(pageTag)
+			if pageTag.ID == 0 {
+				pageTag.PageId = page.ID
+				pageTag.TagId = tag.ID
+				//添加新的页面标签关联记录
+				if err := Db.Create(pageTag).Error; err != nil {
+					log.Fatal(fmt.Sprintf("创建页面标签关联记录失败，pageId: %d，tagId: %d", page.ID, tag.ID), err)
+				}
+			}
+		}
+		//删除无效的页面标签关联记录
+		if err := Db.Where("page_id = ?", page.ID).Not("tag_id", tagIds).Delete(PageTag{}).Error; err != nil {
+			log.Fatal(fmt.Sprintf("删除页面标签管理记录失败，pageId: %d，排除的tagIds: %v", page.ID, tagIds), err)
+		}
+	} else {
+		tagErr = Db.Where("page_id = ?", page.ID).Delete(PageTag{}).Error
+	}
+	if tagErr != nil {
+		log.Fatal(fmt.Sprintf("更新页面标签信息失败，pageId: %d ", page.ID), err)
+	}
 	return err == nil
 }
 
-func editPage(page *Page) bool {
-	if savePage(page) {
+func editPage(pageDto *PageDto) bool {
+	if savePage(pageDto) {
 		//发布状态页面需要保存页面历史记录
-		if page.Published {
+		if pageDto.Published {
 			historicalPage := &HistoricalPage{
-				PageId:    page.ID,
-				Content:   page.Content,
+				PageId:    pageDto.ID,
+				Content:   pageDto.Content,
 				CreatedAt: time.Now(),
 				Owner:     getUserId(),
 			}
 			if err := Db.Create(historicalPage).Error; err != nil {
-				log.Fatal(fmt.Sprintf("保存页面历史记录失败, pageId: %d ", page.ID), err)
+				log.Fatal(fmt.Sprintf("保存页面历史记录失败，pageId: %d ", pageDto.ID), err)
 			}
 		}
 		return true
@@ -346,6 +424,14 @@ func editPage(page *Page) bool {
 func deletePage(id uint) bool {
 	err := Db.Where("id = ? AND owner = ?", id, getUserId()).Delete(Page{}).Error
 	return err == nil
+}
+
+func getTags() *[]Tag {
+	tags := &[]Tag{}
+	if err := Db.Find(tags).Error; err != nil {
+		log.Fatal("获取页面标签列表失败 ", err)
+	}
+	return tags
 }
 
 func getHistoricalPages(pageId uint) *[]HistoricalPage {

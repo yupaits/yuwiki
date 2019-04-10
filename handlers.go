@@ -5,6 +5,16 @@ import (
 	"strconv"
 )
 
+type PageDto struct {
+	ID        uint     `json:"id"`
+	BookId    uint     `json:"bookId" binding:"required"`
+	PartId    uint     `json:"partId" binding:"required"`
+	Title     string   `json:"title" binding:"required"`
+	Content   string   `json:"content"`
+	Tags      []string `json:"tags"`
+	Published bool
+}
+
 type PasswordModify struct {
 	OldPassword     string `json:"oldPassword" binding:"required"`
 	NewPassword     string `json:"newPassword" binding:"required"`
@@ -12,9 +22,9 @@ type PasswordModify struct {
 }
 
 type StarItems struct {
-	Books *[]Book
-	Parts *[]Part
-	Pages *[]Page
+	Books *[]Book `json:"books"`
+	Parts *[]Part `json:"parts"`
+	Pages *[]Page `json:"pages"`
 }
 
 func getBooksHandler(c *gin.Context) {
@@ -93,8 +103,10 @@ func savePartHandler(c *gin.Context) {
 	}
 	if ok, err := savePart(part); ok {
 		Result(c, Ok())
-	} else {
+	} else if err != nil {
 		Result(c, MsgFail(err.Error()))
+	} else {
+		Result(c, CodeFail(SaveFail))
 	}
 }
 
@@ -119,10 +131,10 @@ func getPageHandler(c *gin.Context) {
 }
 
 func savePageHandler(c *gin.Context) {
-	page := &Page{}
-	if err := c.ShouldBind(page); err != nil {
+	pageDto := &PageDto{}
+	if err := c.ShouldBind(pageDto); err != nil {
 		Result(c, CodeFail(ParamsError))
-	} else if savePage(page) {
+	} else if savePage(pageDto) {
 		Result(c, Ok())
 	} else {
 		Result(c, CodeFail(SaveFail))
@@ -130,10 +142,10 @@ func savePageHandler(c *gin.Context) {
 }
 
 func editPageHandler(c *gin.Context) {
-	page := &Page{}
-	if err := c.ShouldBind(page); err != nil {
+	pageDto := &PageDto{}
+	if err := c.ShouldBind(pageDto); err != nil {
 		Result(c, CodeFail(ParamsError))
-	} else if editPage(page) {
+	} else if editPage(pageDto) {
 		Result(c, Ok())
 	} else {
 		Result(c, CodeFail(UpdateFail))
@@ -156,6 +168,10 @@ func getHistoricalPagesHandler(c *gin.Context) {
 	} else {
 		Result(c, OkData(getHistoricalPages(uint(pageId))))
 	}
+}
+
+func getTagsHandler(c *gin.Context) {
+	Result(c, OkData(getTags()))
 }
 
 func getUserInfoHandler(c *gin.Context) {
