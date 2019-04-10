@@ -102,7 +102,8 @@
               </h3>
               <a-spin :spinning="loading.pages" class="list">
                 <div v-for="page in pages" :key="page.ID" class="page-item" :class="{'active': $store.getters.pageId === page.ID}" @click="selectPage(page.ID)">
-                  <a-icon type="file-text"/> {{page.title}}
+                  <div><a-icon type="file-text"/> {{page.title}}</div>
+                  <div class="page-tags"><a-icon type="tags"/> {{page.tags.join(', ')}}</div>
                 </div>
               </a-spin>
             </div>
@@ -472,5 +473,10 @@ import { unlink } from 'fs';
 .page-preview {
   z-index: 0;
   height: 100%;
+}
+.page-tags {
+  line-height: 20px;
+  font-size: 12px;
+  color: #8c8c8c;
 }
 </style>
