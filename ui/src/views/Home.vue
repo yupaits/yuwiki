@@ -130,272 +130,271 @@
 </template>
 
 <script>
-  import BookForm from '../components/form/BookForm'
-  import PartForm from '../components/form/PartForm'
-  import PageForm from '../components/form/PageForm'
-  import PartTree from "../components/PartTree"
-import { unlink } from 'fs';
-  export default {
-    components: {
-      PartTree
-    },
-    data() {
-      return {
-        books: [],
-        parts: [],
-        pages: [],
-        viewedPage: {},
-        loading: {
-          books: false,
-          parts: false,
-          pages: false,
-          pageView: false
-        },
-        modalVisible: false,
-        modal: {
-          type: undefined,
-          key: undefined,
-          visible: false,
-          ok: () => {
-          }
-        },
-        modalType: {
-          create: {label: '新建', icon: 'plus'},
-          modify: {label: '修改', icon: 'edit'}
-        },
-        title: {
-          book: '笔记本',
-          part: '分区',
-          page: '页面',
-        },
-        createHandlers: {
-          book: this.handleAddBook,
-          part: this.handleAddPart,
-          page: this.handleAddPage,
-        },
-        forms: {
-          book: BookForm,
-          part: PartForm,
-          page: PageForm,
-        },
-        default: {
-          book: {},
-          part: {
-            partType: 0,
-            protected: false
-          },
-          page: {}
+import BookForm from '../components/form/BookForm'
+import PartForm from '../components/form/PartForm'
+import PageForm from '../components/form/PageForm'
+import PartTree from "../components/PartTree"
+export default {
+  components: {
+    PartTree
+  },
+  data() {
+    return {
+      books: [],
+      parts: [],
+      pages: [],
+      viewedPage: {},
+      loading: {
+        books: false,
+        parts: false,
+        pages: false,
+        pageView: false
+      },
+      modalVisible: false,
+      modal: {
+        type: undefined,
+        key: undefined,
+        visible: false,
+        ok: () => {
         }
+      },
+      modalType: {
+        create: {label: '新建', icon: 'plus'},
+        modify: {label: '修改', icon: 'edit'}
+      },
+      title: {
+        book: '笔记本',
+        part: '分区',
+        page: '页面',
+      },
+      createHandlers: {
+        book: this.handleAddBook,
+        part: this.handleAddPart,
+        page: this.handleAddPage,
+      },
+      forms: {
+        book: BookForm,
+        part: PartForm,
+        page: PageForm,
+      },
+      default: {
+        book: {},
+        part: {
+          partType: 0,
+          protected: false
+        },
+        page: {}
+      }
+    }
+  },
+  computed: {
+    modalTitle() {
+      const type = this.modalType[this.modal.type];
+      return (type ? type.label : '') + this.title[this.modal.key];
+    },
+    selectedBook() {
+      return this.books.filter(book => book.ID === this.$store.getters.bookId)[0] || {};
+    },
+    form() {
+      return this.forms[this.modal.key];
+    }
+  },
+  created() {
+    this.fetchBooks();
+    this.$eventBus.$on('selectPart', this.selectPart);
+    if (this.$store.getters.pageId) {
+      this.fetchParts(this.$store.getters.bookId);
+      this.fetchPages(this.$store.getters.partId);
+      this.viewPage();
+    }
+  },
+  methods: {
+    fetchBooks() {
+      this.loading.books = true;
+      this.$api.getBooks().then(res => {
+        this.books = res.data;
+        this.loading.books = false;
+      }).catch(() => {
+        this.loading.books = false;
+      });
+    },
+    fetchParts(bookId) {
+      this.loading.parts = true;
+      this.$api.getParts(bookId).then(res => {
+        this.parts = res.data;
+        this.loading.parts = false;
+      }).catch(() => {
+        this.loading.parts = false;
+      });
+    },
+    fetchPages(partId) {
+      this.loading.pages = true;
+      this.$api.getPages(partId).then(res => {
+        this.pages = res.data;
+        this.loading.pages = false;
+      }).catch(() => {
+        this.loading.pages = false;
+      });
+    },
+    toggleMenuVisible() {
+      this.$store.dispatch('setMenuVisible', !this.$store.getters.menuVisible);
+    },
+    viewPage() {
+      this.loading.pageView = true;
+      this.$api.viewPage(this.$store.getters.pageId, false).then(res => {
+        this.viewedPage = res.data;
+        this.loading.pageView = false;
+      }).catch(() => {
+        this.loading.pageView = false;
+      });
+    },
+    handleUserOpt({key}) {
+      alert(key);
+    },
+    showModal(type, key) {
+      this.modal = {
+        type: type,
+        key: key,
+        visible: true,
+        ok: this.createHandlers[key]
+      };
+    },
+    handleCreate({key}) {
+      this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.default[key])));
+      this.showModal('create', key);
+    },
+    closeModal() {
+      this.modal.visible = false;
+    },
+    selectBook(bookId) {
+      this.$store.dispatch('setBookId', bookId);
+      this.$store.dispatch('setPartId', undefined);
+      this.$store.dispatch('setPageId', undefined);
+      this.pages = [];
+      this.viewedPage = {};
+      if (bookId) {
+        this.fetchParts(bookId);
       }
     },
-    computed: {
-      modalTitle() {
-        const type = this.modalType[this.modal.type];
-        return (type ? type.label : '') + this.title[this.modal.key];
-      },
-      selectedBook() {
-        return this.books.filter(book => book.ID === this.$store.getters.bookId)[0] || {};
-      },
-      form() {
-        return this.forms[this.modal.key];
+    selectPart(partId) {
+      this.$store.dispatch('setPageId', undefined);
+      this.viewedPage = {};
+      if (partId) {
+        this.fetchPages(partId);
       }
     },
-    created() {
-      this.fetchBooks();
-      this.$eventBus.$on('selectPart', this.selectPart);
-      if (this.$store.getters.pageId) {
-        this.fetchParts(this.$store.getters.bookId);
-        this.fetchPages(this.$store.getters.partId);
+    selectPage(pageId) {
+      this.$store.dispatch('setPageId', pageId);
+      if (pageId) {
         this.viewPage();
       }
     },
-    methods: {
-      fetchBooks() {
-        this.loading.books = true;
-        this.$api.getBooks().then(res => {
-          this.books = res.data;
-          this.loading.books = false;
-        }).catch(() => {
-          this.loading.books = false;
-        });
-      },
-      fetchParts(bookId) {
-        this.loading.parts = true;
-        this.$api.getParts(bookId).then(res => {
-          this.parts = res.data;
-          this.loading.parts = false;
-        }).catch(() => {
-          this.loading.parts = false;
-        });
-      },
-      fetchPages(partId) {
-        this.loading.pages = true;
-        this.$api.getPages(partId).then(res => {
-          this.pages = res.data;
-          this.loading.pages = false;
-        }).catch(() => {
-          this.loading.pages = false;
-        });
-      },
-      toggleMenuVisible() {
-        this.$store.dispatch('setMenuVisible', !this.$store.getters.menuVisible);
-      },
-      viewPage() {
-        this.loading.pageView = true;
-        this.$api.viewPage(this.$store.getters.pageId, false).then(res => {
-          this.viewedPage = res.data;
-          this.loading.pageView = false;
-        }).catch(() => {
-          this.loading.pageView = false;
-        });
-      },
-      handleUserOpt({key}) {
-        alert(key);
-      },
-      showModal(type, key) {
-        this.modal = {
-          type: type,
-          key: key,
-          visible: true,
-          ok: this.createHandlers[key]
-        };
-      },
-      handleCreate({key}) {
-        this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.default[key])));
-        this.showModal('create', key);
-      },
-      closeModal() {
-        this.modal.visible = false;
-      },
-      selectBook(bookId) {
-        this.$store.dispatch('setBookId', bookId);
-        this.$store.dispatch('setPartId', undefined);
-        this.$store.dispatch('setPageId', undefined);
-        this.pages = [];
-        this.viewedPage = {};
-        if (bookId) {
-          this.fetchParts(bookId);
-        }
-      },
-      selectPart(partId) {
-        this.$store.dispatch('setPageId', undefined);
-        this.viewedPage = {};
-        if (partId) {
-          this.fetchPages(partId);
-        }
-      },
-      selectPage(pageId) {
-        this.$store.dispatch('setPageId', pageId);
-        if (pageId) {
-          this.viewPage();
-        }
-      },
-      editBook() {
-        this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.selectedBook)));
-        this.modal = {
-          type: 'modify',
-          key: 'book',
-          visible: true,
-          ok: this.handleEditBook
-        };
-      },
-      editPart() {
-        this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.$store.getters.part)));
-        this.modal = {
-          type: 'modify',
-          key: 'part',
-          visible: true,
-          ok: this.handleEditPart
-        };
-      },
-      editPage() {
-        this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.viewedPage)));
-        this.modal = {
-          type: 'modify',
-          key: 'page',
-          visible: true,
-          ok: this.handleEditPage
-        };
-      },
-      toEditor() {
-        this.$api.viewPage(this.$store.getters.pageId, true).then(res => {
-          const page = res.data;
-          this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(page)));
-          this.loading.pageView = false;
-        });
-        this.$router.push('/page/edit');
-      },
-      handleAddBook() {
-        this.$api.addBook(this.$store.getters.record).then(() => {
-          this.$message.success(this.$messages.result.createSuccess);
-          this.fetchBooks();
-          this.closeModal();
-        });
-      },
-      handleAddPart() {
-        this.$api.addPart(this.$store.getters.record).then(() => {
-          this.$message.success(this.$messages.result.createSuccess);
-          if (this.$store.getters.bookId) {
-            this.fetchParts(this.$store.getters.bookId);
-          }
-          this.closeModal();
-        });
-      },
-      handleAddPage() {
-        this.$api.addPage(this.$store.getters.record).then(() => {
-          this.$message.success(this.$messages.result.createSuccess);
-          if (this.$store.getters.partId) {
-            this.fetchPages(this.$store.getters.partId);
-          }
-          this.closeModal();
-        });
-      },
-      handleEditBook() {
-        this.$api.editBook(this.$store.getters.record).then(() => {
-          this.$message.success(this.$messages.result.updateSuccess);
-          this.fetchBooks();
-          this.closeModal();
-        });
-      },
-      handleEditPart() {
-        const part = this.$store.getters.record;
-        this.$api.editPart(part).then(() => {
-          this.$message.success(this.$messages.result.updateSuccess);
+    editBook() {
+      this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.selectedBook)));
+      this.modal = {
+        type: 'modify',
+        key: 'book',
+        visible: true,
+        ok: this.handleEditBook
+      };
+    },
+    editPart() {
+      this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.$store.getters.part)));
+      this.modal = {
+        type: 'modify',
+        key: 'part',
+        visible: true,
+        ok: this.handleEditPart
+      };
+    },
+    editPage() {
+      this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(this.viewedPage)));
+      this.modal = {
+        type: 'modify',
+        key: 'page',
+        visible: true,
+        ok: this.handleEditPage
+      };
+    },
+    toEditor() {
+      this.$api.viewPage(this.$store.getters.pageId, true).then(res => {
+        const page = res.data;
+        this.$store.dispatch('setRecord', JSON.parse(JSON.stringify(page)));
+        this.loading.pageView = false;
+      });
+      this.$router.push('/page/edit');
+    },
+    handleAddBook() {
+      this.$api.addBook(this.$store.getters.record).then(() => {
+        this.$message.success(this.$messages.result.createSuccess);
+        this.fetchBooks();
+        this.closeModal();
+      });
+    },
+    handleAddPart() {
+      this.$api.addPart(this.$store.getters.record).then(() => {
+        this.$message.success(this.$messages.result.createSuccess);
+        if (this.$store.getters.bookId) {
           this.fetchParts(this.$store.getters.bookId);
-          this.$store.dispatch('setPart', part);
-          this.closeModal();
-        });
-      },
-      handleEditPage() {
-        this.$api.updatePage(this.$store.getters.record).then(() => {
-          this.$message.success(this.$messages.result.updateSuccess);
+        }
+        this.closeModal();
+      });
+    },
+    handleAddPage() {
+      this.$api.addPage(this.$store.getters.record).then(() => {
+        this.$message.success(this.$messages.result.createSuccess);
+        if (this.$store.getters.partId) {
           this.fetchPages(this.$store.getters.partId);
-          this.closeModal();
-        });
-      },
-      handleDeleteBook() {
-        this.$api.deleteBook(this.$store.getters.bookId).then(() => {
-          this.$message.success(this.$messages.result.deleteSuccess);
-          this.fetchBooks();
-          this.selectBook(undefined);
-        });
-      },
-      handleDeletePart() {
-        this.$api.deletePart(this.$store.getters.partId).then(() => {
-          this.$message.success(this.$messages.result.deleteSuccess);
-          this.fetchParts(this.$store.getters.bookId);
-          this.selectPart(undefined);
-        });
-      },
-      handleDeletePage() {
-        this.$api.deletePage(this.$store.getters.pageId).then(() => {
-          this.$message.success(this.$messages.result.deleteSuccess);
-          this.fetchPages(this.$store.getters.partId);
-          this.selectPage(undefined);
-        });
-      }
+        }
+        this.closeModal();
+      });
+    },
+    handleEditBook() {
+      this.$api.editBook(this.$store.getters.record).then(() => {
+        this.$message.success(this.$messages.result.updateSuccess);
+        this.fetchBooks();
+        this.closeModal();
+      });
+    },
+    handleEditPart() {
+      const part = this.$store.getters.record;
+      this.$api.editPart(part).then(() => {
+        this.$message.success(this.$messages.result.updateSuccess);
+        this.fetchParts(this.$store.getters.bookId);
+        this.$store.dispatch('setPart', part);
+        this.closeModal();
+      });
+    },
+    handleEditPage() {
+      this.$api.updatePage(this.$store.getters.record).then(() => {
+        this.$message.success(this.$messages.result.updateSuccess);
+        this.fetchPages(this.$store.getters.partId);
+        this.closeModal();
+      });
+    },
+    handleDeleteBook() {
+      this.$api.deleteBook(this.$store.getters.bookId).then(() => {
+        this.$message.success(this.$messages.result.deleteSuccess);
+        this.fetchBooks();
+        this.selectBook(undefined);
+      });
+    },
+    handleDeletePart() {
+      this.$api.deletePart(this.$store.getters.partId).then(() => {
+        this.$message.success(this.$messages.result.deleteSuccess);
+        this.fetchParts(this.$store.getters.bookId);
+        this.selectPart(undefined);
+      });
+    },
+    handleDeletePage() {
+      this.$api.deletePage(this.$store.getters.pageId).then(() => {
+        this.$message.success(this.$messages.result.deleteSuccess);
+        this.fetchPages(this.$store.getters.partId);
+        this.selectPage(undefined);
+      });
     }
   }
+}
 </script>
 
 <style scoped>
