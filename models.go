@@ -38,10 +38,11 @@ type User struct {
 
 type Book struct {
 	gorm.Model
-	Name  string `gorm:"unique;not null" json:"name" binding:"required"`
-	Color string `json:"color"`
-	Star  bool   `json:"star"`
-	Owner uint   `gorm:"not null"`
+	Name     string `gorm:"unique;not null" json:"name" binding:"required"`
+	Color    string `json:"color"`
+	Star     bool   `json:"star"`
+	Owner    uint   `gorm:"not null" json:"owner"`
+	SortCode uint   `gorm:"not null" json:"sortCode"`
 }
 
 type Part struct {
@@ -52,8 +53,8 @@ type Part struct {
 	PartType  int8   `gorm:"not null" json:"partType"`
 	Protected bool   `json:"protected"`
 	Password  string `gorm:"size:60" json:"password"`
-	Owner     uint   `gorm:"not null"`
-	SortCode  uint   `gorm:"not null"`
+	Owner     uint   `gorm:"not null" json:"owner"`
+	SortCode  uint   `gorm:"not null" json:"sortCode"`
 }
 
 type Page struct {
@@ -64,6 +65,7 @@ type Page struct {
 	Content   string `gorm:"type:text" json:"content"`
 	Published bool   `json:"published"`
 	Owner     uint   `gorm:"not null" json:"owner"`
+	SortCode  uint   `gorm:"not null" json:"sortCode"`
 }
 
 type Tag struct {
@@ -251,15 +253,17 @@ func savePart(part *Part) (bool, error) {
 			return false, err
 		}
 	}
-	var max uint
-	if rows, err := Db.Table("parts").Select(" MAX(parts.sortCode) AS max").Where("parent_id = ?", part.ParentId).Rows(); err == nil {
-		if rows.Next() {
-			if err := rows.Scan(&max); err != nil {
-				log.Fatal("取排序码最大值出错 ", err)
+	if part.SortCode == 0 {
+		var max uint
+		if rows, err := Db.Table("parts").Select(" MAX(parts.sortCode) AS max").Where("parent_id = ?", part.ParentId).Rows(); err == nil {
+			if rows.Next() {
+				if err := rows.Scan(&max); err != nil {
+					log.Fatal("取排序码最大值出错 ", err)
+				}
 			}
 		}
+		part.SortCode = max + 1
 	}
-	part.SortCode = max + 1
 	var err error
 	if Db.NewRecord(part) {
 		err = Db.Create(part).Error

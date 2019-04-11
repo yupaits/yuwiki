@@ -48,9 +48,13 @@
                   </span>
                 </h3>
                 <a-spin :spinning="loading.books" class="list">
-                  <div v-for="book in books" :key="book.ID" class="book-item" :class="{'active': $store.getters.bookId === book.ID}" @click="selectBook(book.ID)">
-                    <a-icon type="book" theme="twoTone" :twoToneColor="book.color"/> {{book.name}}
-                  </div>
+                  <draggable v-model="books" :move="moveBook" @end="dropBook">
+                    <transition-group>
+                      <div v-for="book in books" :key="book.ID" class="book-item" :class="{'active': $store.getters.bookId === book.ID}" @click="selectBook(book.ID)">
+                        <a-icon type="book" theme="twoTone" :twoToneColor="book.color"/> {{book.name}}
+                      </div>
+                    </transition-group>
+                  </draggable>
                 </a-spin>
               </div>
             </a-col>
@@ -101,10 +105,14 @@
                 </span>
               </h3>
               <a-spin :spinning="loading.pages" class="list">
-                <div v-for="page in pages" :key="page.ID" class="page-item" :class="{'active': $store.getters.pageId === page.ID}" @click="selectPage(page.ID)">
-                  <div><a-icon type="file-text"/> {{page.title}}</div>
-                  <div class="page-tags"><a-icon type="tags"/> {{page.tags.join(', ')}}</div>
-                </div>
+                <draggable v-model="pages">
+                  <transition-group>
+                    <div v-for="page in pages" :key="page.ID" class="page-item" :class="{'active': $store.getters.pageId === page.ID}" @click="selectPage(page.ID)">
+                      <div><a-icon type="file-text"/> {{page.title}}</div>
+                      <div class="page-tags" v-if="page.tags && page.tags.length > 0"><a-icon type="tags"/> {{page.tags.join(', ')}}</div>
+                    </div>
+                  </transition-group>
+                </draggable>
               </a-spin>
             </div>
           </a-col>
@@ -130,13 +138,14 @@
 </template>
 
 <script>
+import draggable from 'vuedraggable'
 import BookForm from '../components/form/BookForm'
 import PartForm from '../components/form/PartForm'
 import PageForm from '../components/form/PageForm'
 import PartTree from "../components/PartTree"
 export default {
   components: {
-    PartTree
+    draggable, PartTree
   },
   data() {
     return {
@@ -392,6 +401,12 @@ export default {
         this.fetchPages(this.$store.getters.partId);
         this.selectPage(undefined);
       });
+    },
+    moveBook(event) {
+      console.log(event);
+    },
+    dropBook() {
+      
     }
   }
 }

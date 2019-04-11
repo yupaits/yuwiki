@@ -3,30 +3,36 @@
     <div class="part-item" :class="{'active': $store.getters.partId === option.ID}" @click="selectPart(option.ID)">
       <a-icon :type="option.partType === 0 ? 'folder-open' : 'inbox'"/> {{option.name}}
     </div>
-    <part-node v-for="part in option.SubParts" :key="part.ID" :option="part" class="ml-2"/>
+    <draggable v-model="option.SubParts">
+      <transition-group>
+        <part-node v-for="part in option.SubParts" :key="part.ID" :option="part" class="ml-2"/>
+      </transition-group>
+    </draggable>
   </div>
 </template>
 
 <script>
-  export default {
-    name: "PartNode",
-    props: {
-      option: {
-        type: Object,
-        required: true
-      }
-    },
-    methods: {
-      selectPart(partId) {
-        this.$store.dispatch('setPartId', partId);
-        let part = Object.assign({}, this.option);
-        delete part.SubParts;
-        this.$store.dispatch('setPart', part);
-        this.$emit('select', partId);
-        this.$eventBus.$emit('selectPart', partId);
-      }
+import draggable from 'vuedraggable'
+export default {
+  name: "PartNode",
+  components: {draggable},
+  props: {
+    option: {
+      type: Object,
+      required: true
+    }
+  },
+  methods: {
+    selectPart(partId) {
+      this.$store.dispatch('setPartId', partId);
+      let part = Object.assign({}, this.option);
+      delete part.SubParts;
+      this.$store.dispatch('setPart', part);
+      this.$emit('select', partId);
+      this.$eventBus.$emit('selectPart', partId);
     }
   }
+}
 </script>
 
 <style scoped>
