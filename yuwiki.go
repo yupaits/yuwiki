@@ -51,6 +51,7 @@ func Run() {
 		books.PUT("/:bookId", saveBookHandler)
 		books.DELETE("/:bookId", deleteBookHandler)
 		books.POST("/share", shareBookHandler)
+		books.POST("/sort", sortBooksHandler)
 	}
 
 	parts := r.Group("/parts")
@@ -60,6 +61,7 @@ func Run() {
 		parts.POST("", savePartHandler)
 		parts.PUT("/:partId", savePartHandler)
 		parts.DELETE("/:partId", deletePartHandler)
+		parts.POST("/sort", sortPartsHandler)
 	}
 
 	pages := r.Group("/pages")
@@ -70,6 +72,7 @@ func Run() {
 		pages.PUT("/:pageId", savePageHandler)
 		pages.PUT("/:pageId/edit", editPageHandler)
 		pages.DELETE("/:pageId", deletePageHandler)
+		pages.POST("/sort", sortPagesHandler)
 	}
 
 	tags := r.Group("/tags")

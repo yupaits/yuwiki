@@ -13,7 +13,12 @@ export default new Vuex.Store({
     partId: undefined,
     pageId: undefined,
     part: {},
-    menuVisible: true
+    menuVisible: true,
+    sortPart: {
+      list: [],
+      fromIndex: 0,
+      toIndex: 0
+    }
   },
   getters: {
     user(state) {
@@ -36,6 +41,9 @@ export default new Vuex.Store({
     },
     menuVisible(state) {
       return state.menuVisible;
+    },
+    sortPart(state) {
+      return state.sortPart;
     }
   },
   mutations: {
@@ -59,6 +67,9 @@ export default new Vuex.Store({
     },
     setMenuVisible(state, visible) {
       state.menuVisible = visible;
+    },
+    setSortPart(state, sortPart) {
+      state.sortPart = sortPart;
     }
   },
   actions: {
@@ -82,6 +93,9 @@ export default new Vuex.Store({
     },
     setMenuVisible({commit}, visible) {
       commit('setMenuVisible', visible);
+    },
+    setSortPart({commit}, sortPart) {
+      commit('setSortPart', sortPart);
     }
   }
 })

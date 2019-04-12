@@ -69,5 +69,14 @@ export default {
   },
   siteSearch(query) {
     return client.post('/site/search', query);
+  },
+  sortBooks(sortedBooks) {
+    return client.post(`/books/sort`, sortedBooks);
+  },
+  sortParts(sortedParts) {
+    return client.post(`/parts/sort`, sortedParts);
+  },
+  sortPages(sortedPages) {
+    return client.post(`/pages/sort`, sortedPages);
   }
 }

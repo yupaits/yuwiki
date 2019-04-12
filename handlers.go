@@ -27,6 +27,33 @@ type StarItems struct {
 	Pages *[]Page `json:"pages"`
 }
 
+type SortBooks struct {
+	SortBooks []SortBook `json:"sortBooks"`
+}
+
+type SortBook struct {
+	BookId   uint `json:"bookId"`
+	SortCode uint `json:"sortCode"`
+}
+
+type SortParts struct {
+	SortParts []SortPart `json:"sortParts"`
+}
+
+type SortPart struct {
+	PartId   uint `json:"partId"`
+	SortCode uint `json:"sortCode"`
+}
+
+type SortPages struct {
+	SortPages []SortPage `json:"sortPages"`
+}
+
+type SortPage struct {
+	PageId   uint `json:"pageId"`
+	SortCode uint `json:"sortCode"`
+}
+
 func getBooksHandler(c *gin.Context) {
 	Result(c, OkData(getBooks()))
 }
@@ -199,4 +226,43 @@ func getStarItemsHandler(c *gin.Context) {
 
 func siteSearchHandler(c *gin.Context) {
 
+}
+
+func sortBooksHandler(c *gin.Context) {
+	sortedBooks := &SortBooks{}
+	if err := c.ShouldBind(sortBooks); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if ok, err := sortBooks(sortedBooks); ok {
+		Result(c, Ok())
+	} else if err != nil {
+		Result(c, MsgFail(err.Error()))
+	} else {
+		Result(c, CodeFail(SortFail))
+	}
+}
+
+func sortPartsHandler(c *gin.Context) {
+	sortedParts := &SortParts{}
+	if err := c.ShouldBind(sortedParts); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if ok, err := sortParts(sortedParts); ok {
+		Result(c, Ok())
+	} else if err != nil {
+		Result(c, MsgFail(err.Error()))
+	} else {
+		Result(c, CodeFail(SortFail))
+	}
+}
+
+func sortPagesHandler(c *gin.Context) {
+	sortedPages := &SortPages{}
+	if err := c.ShouldBind(sortedPages); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if ok, err := sortPages(sortedPages); ok {
+		Result(c, Ok())
+	} else if err != nil {
+		Result(c, MsgFail(err.Error()))
+	} else {
+		Result(c, CodeFail(SortFail))
+	}
 }

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <draggable v-model="parts">
+    <draggable v-model="parts" :move="movePart" @end="dropPart">
       <transition-group>
         <part-node v-for="part in parts" :key="part.ID" :option="part"></part-node>
       </transition-group>
@@ -18,6 +18,18 @@ export default {
     parts: {
       type: Array,
       required: true
+    }
+  },
+  methods: {
+    movePart(event) {
+      this.$store.dispatch('setSortPart', {
+        list: event.relatedContext.list,
+        fromIndex: event.draggedContext.index,
+        toIndex: event.draggedContext.futureIndex
+      });
+    },
+    dropPart() {
+      this.$eventBus.$emit('dropPart');
     }
   }
 }

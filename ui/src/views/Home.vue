@@ -105,7 +105,7 @@
                 </span>
               </h3>
               <a-spin :spinning="loading.pages" class="list">
-                <draggable v-model="pages">
+                <draggable v-model="pages" :move="movePage" @end="dropPage">
                   <transition-group>
                     <div v-for="page in pages" :key="page.ID" class="page-item" :class="{'active': $store.getters.pageId === page.ID}" @click="selectPage(page.ID)">
                       <div><a-icon type="file-text"/> {{page.title}}</div>
@@ -193,6 +193,18 @@ export default {
           protected: false
         },
         page: {}
+      },
+      sort: {
+        book: {
+          list: [],
+          fromIndex: 0,
+          toIndex: 0
+        },
+        page: {
+          list: [],
+          fromIndex: 0,
+          toIndex: 0
+        }
       }
     }
   },
@@ -211,6 +223,7 @@ export default {
   created() {
     this.fetchBooks();
     this.$eventBus.$on('selectPart', this.selectPart);
+    this.$eventBus.$on('dropPart', this.dropPart);
     if (this.$store.getters.pageId) {
       this.fetchParts(this.$store.getters.bookId);
       this.fetchPages(this.$store.getters.partId);
@@ -403,10 +416,83 @@ export default {
       });
     },
     moveBook(event) {
-      console.log(event);
+      this.sort.book = {
+        list: event.relatedContext.list,
+        fromIndex: event.draggedContext.index,
+        toIndex: event.draggedContext.futureIndex
+      };
     },
     dropBook() {
-      
+      const sortedBooks = sortedData(this.sort.book).map(data => {
+        return {
+          bookId: data.id, 
+          sortCode: data.sortCode
+        }
+      });;
+      if (sortedBooks.length > 0) {
+        this.$api.sortBooks(sortedBooks);
+      }
+    },
+    dropPart() {
+      const sortPart = this.$store.getters.sortPart;
+      const sortedParts = sortedData(sortPart).map(data => {
+        return {
+          partId: data.id, 
+          sortCode: data.sortCode
+        }
+      });
+      if (sortedParts.length > 0) {
+        this.$api.sortParts(sortedParts);
+      }
+    },
+    movePage(event) {
+      this.sort.page = {
+        list: event.relatedContext.list,
+        fromIndex: event.draggedContext.index,
+        toIndex: event.draggedContext.toIndex
+      }
+    },
+    dropPage() {
+      const sortedPages = sortedData(this.sort.page).map(data => {
+        return {
+          pageId: data.id, 
+          sortCode: data.sortCode
+        }
+      });;
+      if (sortedPages.length > 0) {
+        this.$api.sortPages(sortedPages);
+      }
+    },
+    sortedData(sortData) {
+      const sortedData = [];
+      if (sortData && sortData.list && sortData.list.length > 0 && sortData.fromIndex !== sortData.toIndex) {
+        if (sortData.fromIndex < sortData.toIndex) {
+          const tempSortCode = sortData.list[sortData.toIndex].sortCode;
+          for (let i = sortData.toIndex; i > sortData.fromIndex; i--) {
+            sortedData.push({
+              id: sortData.list[i].id,
+              sortCode: sortData.list[i - 1].sortCode
+            });            
+          }
+          sortedData.push({
+            id: sortData.list[sortData.fromIndex].id,
+            sortCode: tempSortCode
+          });
+        } else if (sortData.fromIndex > sortData.toIndex) {
+          const tempSortCode = sortData.list[sortData.fromIndex].sortCode;
+          for (let i = sortData.fromIndex; i < sortData.toIndex; i++) {
+            sortedData.push({
+              id: sortData.list[i].id,
+              sortCode: sortData.list[i + 1].sortCode
+            });
+          }
+          sortedData.push({
+            id: sortData.list[sortData.toIndex].id,
+            sortCode: tempSortCode
+          });
+        }
+      }
+      return sortedData;
     }
   }
 }

@@ -3,7 +3,7 @@
     <div class="part-item" :class="{'active': $store.getters.partId === option.ID}" @click="selectPart(option.ID)">
       <a-icon :type="option.partType === 0 ? 'folder-open' : 'inbox'"/> {{option.name}}
     </div>
-    <draggable v-model="option.SubParts">
+    <draggable v-model="option.SubParts" :move="movePart" @end="dropPart">
       <transition-group>
         <part-node v-for="part in option.SubParts" :key="part.ID" :option="part" class="ml-2"/>
       </transition-group>
@@ -30,6 +30,16 @@ export default {
       this.$store.dispatch('setPart', part);
       this.$emit('select', partId);
       this.$eventBus.$emit('selectPart', partId);
+    },
+    movePart(event) {
+      this.$store.dispatch('setSortPart', {
+        list: event.relatedContext.list,
+        fromIndex: event.draggedContext.index,
+        toIndex: event.draggedContext.futureIndex
+      });
+    },
+    dropPart() {
+      this.$eventBus.$emit('dropPart');
     }
   }
 }

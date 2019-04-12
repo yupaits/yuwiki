@@ -177,6 +177,17 @@ func getBooks() *[]Book {
 }
 
 func saveBook(book *Book) bool {
+	if book.SortCode == 0 {
+		var max uint
+		if rows, err := Db.Table("books").Select(" MAX(books.sort_code) AS max").Rows(); err == nil {
+			if rows.Next() {
+				if err := rows.Scan(&max); err != nil {
+					max = 0
+				}
+			}
+		}
+		book.SortCode = max + 1
+	}
 	var err error
 	if Db.NewRecord(book) {
 		err = Db.Create(book).Error
@@ -255,10 +266,10 @@ func savePart(part *Part) (bool, error) {
 	}
 	if part.SortCode == 0 {
 		var max uint
-		if rows, err := Db.Table("parts").Select(" MAX(parts.sortCode) AS max").Where("parent_id = ?", part.ParentId).Rows(); err == nil {
+		if rows, err := Db.Table("parts").Select(" MAX(parts.sort_code) AS max").Where("parent_id = ?", part.ParentId).Rows(); err == nil {
 			if rows.Next() {
 				if err := rows.Scan(&max); err != nil {
-					log.Fatal("取排序码最大值出错 ", err)
+					max = 0
 				}
 			}
 		}
@@ -361,6 +372,17 @@ func savePage(pageDto *PageDto) bool {
 		Title:     pageDto.Title,
 		Content:   pageDto.Content,
 		Published: pageDto.Published,
+	}
+	if page.SortCode == 0 {
+		var max uint
+		if rows, err := Db.Table("pages").Select(" MAX(pages.sort_code) AS max").Rows(); err == nil {
+			if rows.Next() {
+				if err := rows.Scan(&max); err != nil {
+					max = 0
+				}
+			}
+		}
+		page.SortCode = max + 1
 	}
 	var err error
 	if Db.NewRecord(page) {
@@ -478,4 +500,43 @@ func getStarItems() *StarItems {
 		Pages: &starPages,
 	}
 	return starItems
+}
+
+func sortBooks(sortedBooks *SortBooks) (bool, error) {
+	tx := Db.Begin()
+	for _, sortedBook := range sortedBooks.SortBooks {
+		book := Book{Model: gorm.Model{ID: sortedBook.BookId}}
+		if err := tx.Model(&book).Update("sort_code", sortedBook.SortCode).Error; err != nil {
+			tx.Rollback()
+			return false, err
+		}
+	}
+	tx.Commit()
+	return true, nil
+}
+
+func sortParts(sortedParts *SortParts) (bool, error) {
+	tx := Db.Begin()
+	for _, sortedPart := range sortedParts.SortParts {
+		part := Part{Model: gorm.Model{ID: sortedPart.PartId}}
+		if err := tx.Model(&part).Update("sort_code", sortedPart.SortCode).Error; err != nil {
+			tx.Rollback()
+			return false, err
+		}
+	}
+	tx.Commit()
+	return true, nil
+}
+
+func sortPages(sortedPages *SortPages) (bool, error) {
+	tx := Db.Begin()
+	for _, sortedPage := range sortedPages.SortPages {
+		page := Page{Model: gorm.Model{ID: sortedPage.PageId}}
+		if err := tx.Model(&page).Update("sort_code", sortedPage.SortCode).Error; err != nil {
+			tx.Rollback()
+			return false, err
+		}
+	}
+	tx.Commit()
+	return true, nil
 }

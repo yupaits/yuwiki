@@ -16,6 +16,7 @@ const (
 	UpdateFail       = 20002
 	DeleteFail       = 20003
 	SaveFail         = 20004
+	SortFail         = 20005
 	FileUploadFail   = 30001
 )
 
@@ -30,6 +31,7 @@ var messages = map[int]string{
 	UpdateFail:       "更新记录失败",
 	DeleteFail:       "删除记录失败",
 	SaveFail:         "保存记录失败",
+	SortFail:         "排序操作失败",
 	FileUploadFail:   "文件上传失败",
 }
 
