@@ -103,6 +103,10 @@ type SharedBook struct {
 	UserId uint `gorm:"not null;index" json:"userId" binding:"required"`
 }
 
+type maxSortCode struct {
+	Max uint
+}
+
 func currentUser() (*User, error) {
 	userId := getUserId()
 	user := &User{}
@@ -178,15 +182,11 @@ func getBooks() *[]Book {
 
 func saveBook(book *Book) bool {
 	if book.SortCode == 0 {
-		var max uint
-		if rows, err := Db.Table("books").Select(" MAX(books.sort_code) AS max").Rows(); err == nil {
-			if rows.Next() {
-				if err := rows.Scan(&max); err != nil {
-					max = 0
-				}
-			}
+		var maxCode maxSortCode
+		if err := Db.Raw("SELECT MAX(books.sort_code) AS max FROM books WHERE owner = ?", getUserId()).Scan(&maxCode).Error; err != nil {
+			maxCode.Max = 0
 		}
-		book.SortCode = max + 1
+		book.SortCode = maxCode.Max + 1
 	}
 	var err error
 	if Db.NewRecord(book) {
@@ -265,15 +265,11 @@ func savePart(part *Part) (bool, error) {
 		}
 	}
 	if part.SortCode == 0 {
-		var max uint
-		if rows, err := Db.Table("parts").Select(" MAX(parts.sort_code) AS max").Where("parent_id = ?", part.ParentId).Rows(); err == nil {
-			if rows.Next() {
-				if err := rows.Scan(&max); err != nil {
-					max = 0
-				}
-			}
+		var maxCode maxSortCode
+		if err := Db.Raw("SELECT MAX(parts.sort_code) AS max FROM parts WHERE parent_id = ? AND owner = ?", part.ParentId, getUserId()).Scan(&maxCode).Error; err != nil {
+			maxCode.Max = 0
 		}
-		part.SortCode = max + 1
+		part.SortCode = maxCode.Max + 1
 	}
 	var err error
 	if Db.NewRecord(part) {
@@ -374,15 +370,11 @@ func savePage(pageDto *PageDto) bool {
 		Published: pageDto.Published,
 	}
 	if page.SortCode == 0 {
-		var max uint
-		if rows, err := Db.Table("pages").Select(" MAX(pages.sort_code) AS max").Rows(); err == nil {
-			if rows.Next() {
-				if err := rows.Scan(&max); err != nil {
-					max = 0
-				}
-			}
+		var maxCode maxSortCode
+		if err := Db.Raw("SELECT MAX(pages.sort_code) AS max FROM pages WHERE owner = ?", getUserId()).Scan(&maxCode).Error; err != nil {
+			maxCode.Max = 0
 		}
-		page.SortCode = max + 1
+		page.SortCode = maxCode.Max + 1
 	}
 	var err error
 	if Db.NewRecord(page) {
