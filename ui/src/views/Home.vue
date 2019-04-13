@@ -423,19 +423,19 @@ export default {
       };
     },
     dropBook() {
-      const sortedBooks = sortedData(this.sort.book).map(data => {
+      const sortedBooks = this.sortedData(this.sort.book).map(data => {
         return {
           bookId: data.id, 
           sortCode: data.sortCode
         }
-      });;
+      });
       if (sortedBooks.length > 0) {
         this.$api.sortBooks(sortedBooks);
       }
     },
     dropPart() {
       const sortPart = this.$store.getters.sortPart;
-      const sortedParts = sortedData(sortPart).map(data => {
+      const sortedParts = this.sortedData(sortPart).map(data => {
         return {
           partId: data.id, 
           sortCode: data.sortCode
@@ -453,12 +453,12 @@ export default {
       }
     },
     dropPage() {
-      const sortedPages = sortedData(this.sort.page).map(data => {
+      const sortedPages = this.sortedData(this.sort.page).map(data => {
         return {
           pageId: data.id, 
           sortCode: data.sortCode
         }
-      });;
+      });
       if (sortedPages.length > 0) {
         this.$api.sortPages(sortedPages);
       }
@@ -470,24 +470,24 @@ export default {
           const tempSortCode = sortData.list[sortData.toIndex].sortCode;
           for (let i = sortData.toIndex; i > sortData.fromIndex; i--) {
             sortedData.push({
-              id: sortData.list[i].id,
+              id: sortData.list[i].ID,
               sortCode: sortData.list[i - 1].sortCode
             });            
           }
           sortedData.push({
-            id: sortData.list[sortData.fromIndex].id,
+            id: sortData.list[sortData.fromIndex].ID,
             sortCode: tempSortCode
           });
         } else if (sortData.fromIndex > sortData.toIndex) {
           const tempSortCode = sortData.list[sortData.fromIndex].sortCode;
           for (let i = sortData.fromIndex; i < sortData.toIndex; i++) {
             sortedData.push({
-              id: sortData.list[i].id,
+              id: sortData.list[i].ID,
               sortCode: sortData.list[i + 1].sortCode
             });
           }
           sortedData.push({
-            id: sortData.list[sortData.toIndex].id,
+            id: sortData.list[sortData.toIndex].ID,
             sortCode: tempSortCode
           });
         }

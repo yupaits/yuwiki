@@ -494,9 +494,9 @@ func getStarItems() *StarItems {
 	return starItems
 }
 
-func sortBooks(sortedBooks *SortBooks) (bool, error) {
+func sortBooks(sortedBooks *[]SortBook) (bool, error) {
 	tx := Db.Begin()
-	for _, sortedBook := range sortedBooks.SortBooks {
+	for _, sortedBook := range *sortedBooks {
 		book := Book{Model: gorm.Model{ID: sortedBook.BookId}}
 		if err := tx.Model(&book).Update("sort_code", sortedBook.SortCode).Error; err != nil {
 			tx.Rollback()
@@ -507,9 +507,9 @@ func sortBooks(sortedBooks *SortBooks) (bool, error) {
 	return true, nil
 }
 
-func sortParts(sortedParts *SortParts) (bool, error) {
+func sortParts(sortedParts *[]SortPart) (bool, error) {
 	tx := Db.Begin()
-	for _, sortedPart := range sortedParts.SortParts {
+	for _, sortedPart := range *sortedParts {
 		part := Part{Model: gorm.Model{ID: sortedPart.PartId}}
 		if err := tx.Model(&part).Update("sort_code", sortedPart.SortCode).Error; err != nil {
 			tx.Rollback()
@@ -520,9 +520,9 @@ func sortParts(sortedParts *SortParts) (bool, error) {
 	return true, nil
 }
 
-func sortPages(sortedPages *SortPages) (bool, error) {
+func sortPages(sortedPages *[]SortPage) (bool, error) {
 	tx := Db.Begin()
-	for _, sortedPage := range sortedPages.SortPages {
+	for _, sortedPage := range *sortedPages {
 		page := Page{Model: gorm.Model{ID: sortedPage.PageId}}
 		if err := tx.Model(&page).Update("sort_code", sortedPage.SortCode).Error; err != nil {
 			tx.Rollback()
