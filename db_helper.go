@@ -38,7 +38,6 @@ func InitDb(update bool) {
 	Db.DB().SetMaxOpenConns(200)
 	Db.DB().SetMaxIdleConns(100)
 	Db.Callback().Create().Before("gorm:create").Register("set_owner", setOwner)
-	Db.Callback().Update().Before("gorm:update").Register("set_owner", setOwner)
 	Db.LogMode(true)
 	book := &Book{}
 	part := &Part{}

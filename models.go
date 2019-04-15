@@ -174,7 +174,7 @@ func modifyPassword(modify *PasswordModify) (bool, string) {
 
 func getBooks() *[]Book {
 	books := &[]Book{}
-	if err := Db.Where("owner = ?", getUserId()).Find(books).Error; err != nil {
+	if err := Db.Where("owner = ?", getUserId()).Order("sort_code").Find(books).Error; err != nil {
 		log.Fatal("获取笔记本清单失败 ", err)
 	}
 	return books
@@ -210,7 +210,7 @@ func deleteBook(id uint) bool {
 
 func getBookParts(bookId uint) *[]TreePart {
 	parts := &[]Part{}
-	if err := Db.Where("book_id = ? AND parent_Id = 0 AND owner = ?", bookId, getUserId()).Find(parts).Error; err != nil {
+	if err := Db.Where("book_id = ? AND parent_Id = 0 AND owner = ?", bookId, getUserId()).Order("sort_code").Find(parts).Error; err != nil {
 		log.Fatal(fmt.Sprintf("获取笔记本分区清单失败，bookId: %d ", bookId), err)
 	}
 	var treeParts []TreePart
@@ -229,7 +229,7 @@ func getBookParts(bookId uint) *[]TreePart {
 
 func getSubParts(parentId uint) *[]TreePart {
 	parts := &[]Part{}
-	if err := Db.Where("parent_id = ?", parentId).Find(parts).Error; err != nil {
+	if err := Db.Where("parent_id = ?", parentId).Order("sort_code").Find(parts).Error; err != nil {
 		log.Fatal(fmt.Sprintf("获取笔记本分区子分区列表失败，parentId: %d ", parentId), err)
 	}
 	var subParts []TreePart
@@ -309,7 +309,7 @@ func deletePart(id uint) bool {
 
 func getPartPages(partId uint) *[]PageVo {
 	pages := &[]Page{}
-	if err := Db.Where("part_id = ? AND owner = ?", partId, getUserId()).Find(pages).Error; err != nil {
+	if err := Db.Where("part_id = ? AND owner = ?", partId, getUserId()).Order("sort_code").Find(pages).Error; err != nil {
 		log.Fatal(fmt.Sprintf("获取分区页面清单失败，partId: %d ", partId), err)
 	}
 	var pageVos []PageVo
@@ -454,7 +454,7 @@ func getTags() *[]Tag {
 
 func getHistoricalPages(pageId uint) *[]HistoricalPage {
 	historicalPages := &[]HistoricalPage{}
-	if err := Db.Where("page_id = ? AND owner = ?", pageId, getUserId()).Find(historicalPages).Error; err != nil {
+	if err := Db.Where("page_id = ? AND owner = ?", pageId, getUserId()).Order("created_at DESC").Find(historicalPages).Error; err != nil {
 		log.Fatal(fmt.Sprintf("获取页面历史记录失败，pageId: %d ", pageId), err)
 	}
 	return historicalPages
