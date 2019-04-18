@@ -3,6 +3,7 @@ package yuwiki
 import (
 	"github.com/gin-gonic/gin"
 	"strconv"
+	"time"
 )
 
 type PageDto struct {
@@ -12,7 +13,10 @@ type PageDto struct {
 	Title     string   `json:"title" binding:"required"`
 	Content   string   `json:"content"`
 	Tags      []string `json:"tags"`
+	Owner     uint     `json:"owner"`
+	SortCode  uint     `json:"sortCode"`
 	Published bool
+	CreatedAt time.Time `json:"CreatedAt"`
 }
 
 type PasswordModify struct {

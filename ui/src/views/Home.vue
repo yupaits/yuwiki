@@ -110,6 +110,10 @@
                     <div v-for="page in pages" :key="page.ID" class="page-item" :class="{'active': $store.getters.pageId === page.ID}" @click="selectPage(page.ID)">
                       <div><a-icon type="file-text"/> {{page.title}}</div>
                       <div class="page-tags" v-if="page.tags && page.tags.length > 0"><a-icon type="tags"/> {{page.tags.join(', ')}}</div>
+                      <div class="page-time">
+                        <a-icon type="clock-circle"/> 创建于 
+                        <span :title="dayjs(page.CreatedAt).format('YYYY-MM-DD HH:mm:ss')">{{dayjs().from(dayjs(page.CreatedAt))}}</span>
+                      </div>
                     </div>
                   </transition-group>
                 </draggable>
@@ -118,7 +122,7 @@
           </a-col>
           <a-col :span="$store.getters.menuVisible ? 10 : 17">
             <div class="holder preview-holder">
-              <mavon-editor :value="this.viewedPage.content" :toolbarsFlag="false" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
+              <mavon-editor :value="this.viewedPage.content" :toolbars="toolbars" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
             </div>
           </a-col>
         </a-row>
@@ -143,6 +147,14 @@ import BookForm from '../components/form/BookForm'
 import PartForm from '../components/form/PartForm'
 import PageForm from '../components/form/PageForm'
 import PartTree from "../components/PartTree"
+import config from '../config'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/zh-cn'
+
+dayjs.locale('zh-cn')
+dayjs.extend(relativeTime)
+
 export default {
   components: {
     draggable, PartTree
@@ -194,6 +206,8 @@ export default {
         },
         page: {}
       },
+      dayjs,
+      toolbars: config.preivew.toolbars,
       sort: {
         book: {
           list: [],
@@ -430,7 +444,9 @@ export default {
         }
       });
       if (sortedBooks.length > 0) {
-        this.$api.sortBooks(sortedBooks);
+        this.$api.sortBooks(sortedBooks).then(() => {
+          this.fetchBooks();
+        });
       }
     },
     dropPart() {
@@ -442,14 +458,16 @@ export default {
         }
       });
       if (sortedParts.length > 0) {
-        this.$api.sortParts(sortedParts);
+        this.$api.sortParts(sortedParts).then(() => {
+          this.fetchParts(this.$store.getters.bookId);
+        });
       }
     },
     movePage(event) {
       this.sort.page = {
         list: event.relatedContext.list,
         fromIndex: event.draggedContext.index,
-        toIndex: event.draggedContext.toIndex
+        toIndex: event.draggedContext.futureIndex
       }
     },
     dropPage() {
@@ -460,7 +478,9 @@ export default {
         }
       });
       if (sortedPages.length > 0) {
-        this.$api.sortPages(sortedPages);
+        this.$api.sortPages(sortedPages).then(() => {
+          this.fetchPages(this.$store.getters.partId);
+        });
       }
     },
     sortedData(sortData) {
@@ -469,25 +489,27 @@ export default {
         if (sortData.fromIndex < sortData.toIndex) {
           const tempSortCode = sortData.list[sortData.toIndex].sortCode;
           for (let i = sortData.toIndex; i > sortData.fromIndex; i--) {
-            sortedData.push({
+            const data = {
               id: sortData.list[i].ID,
               sortCode: sortData.list[i - 1].sortCode
-            });            
+            };
+            sortedData.push(JSON.parse(JSON.stringify(data)));
           }
           sortedData.push({
             id: sortData.list[sortData.fromIndex].ID,
             sortCode: tempSortCode
           });
         } else if (sortData.fromIndex > sortData.toIndex) {
-          const tempSortCode = sortData.list[sortData.fromIndex].sortCode;
-          for (let i = sortData.fromIndex; i < sortData.toIndex; i++) {
-            sortedData.push({
+          const tempSortCode = sortData.list[sortData.toIndex].sortCode;
+          for (let i = sortData.toIndex; i < sortData.fromIndex; i++) {
+            const data = {
               id: sortData.list[i].ID,
               sortCode: sortData.list[i + 1].sortCode
-            });
+            };
+            sortedData.push(JSON.parse(JSON.stringify(data)));
           }
           sortedData.push({
-            id: sortData.list[sortData.toIndex].ID,
+            id: sortData.list[sortData.fromIndex].ID,
             sortCode: tempSortCode
           });
         }
@@ -574,7 +596,7 @@ export default {
   z-index: 0;
   height: 100%;
 }
-.page-tags {
+.page-tags,.page-time {
   line-height: 20px;
   font-size: 12px;
   color: #8c8c8c;

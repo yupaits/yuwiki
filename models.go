@@ -362,12 +362,14 @@ func setPageTags(pageVo *PageVo) {
 
 func savePage(pageDto *PageDto) bool {
 	page := &Page{
-		Model:     gorm.Model{ID: pageDto.ID},
+		Model:     gorm.Model{ID: pageDto.ID, CreatedAt: pageDto.CreatedAt},
 		BookId:    pageDto.BookId,
 		PartId:    pageDto.PartId,
 		Title:     pageDto.Title,
 		Content:   pageDto.Content,
 		Published: pageDto.Published,
+		Owner:     pageDto.Owner,
+		SortCode:  pageDto.SortCode,
 	}
 	if page.SortCode == 0 {
 		var maxCode maxSortCode
