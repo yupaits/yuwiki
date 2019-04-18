@@ -6,9 +6,11 @@ import (
 )
 
 type AppConfig struct {
-	Debug   bool   `toml:"debug"`
-	LogFile string `toml:"log_file"`
-	Http    struct {
+	Debug         bool   `toml:"debug"`
+	LogFile       string `toml:"log_file"`
+	SessionCookie string `toml:"session_cookie"`
+	Secret        string `toml:"secret"`
+	Http          struct {
 		Port            string `toml:"port"`
 		Favicon         string `toml:"favicon"`
 		StaticPath      string `toml:"static_path"`
