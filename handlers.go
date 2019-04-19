@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+type LoginForm struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
 type PageDto struct {
 	ID        uint     `json:"id"`
 	BookId    uint     `json:"bookId" binding:"required"`
@@ -44,6 +49,11 @@ type SortPart struct {
 type SortPage struct {
 	PageId   uint `json:"pageId"`
 	SortCode uint `json:"sortCode"`
+}
+
+func checkLogin(c *gin.Context) (bool, *User, error) {
+	//TODO
+	return true, &User{}, nil
 }
 
 func getBooksHandler(c *gin.Context) {

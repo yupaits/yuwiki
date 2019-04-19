@@ -39,6 +39,7 @@ func InitDb(update bool) {
 	Db.DB().SetMaxIdleConns(100)
 	Db.Callback().Create().Before("gorm:create").Register("set_owner", setOwner)
 	Db.LogMode(true)
+	user := &User{}
 	book := &Book{}
 	part := &Part{}
 	page := &Page{}
@@ -47,6 +48,11 @@ func InitDb(update bool) {
 	pageTag := &PageTag{}
 	sharedBook := &SharedBook{}
 	if update {
+		if Db.HasTable(user) {
+			Db.AutoMigrate(user)
+		} else {
+			Db.CreateTable(user)
+		}
 		if Db.HasTable(book) {
 			Db.AutoMigrate(book)
 		} else {
@@ -83,7 +89,7 @@ func InitDb(update bool) {
 			Db.CreateTable(sharedBook)
 		}
 	} else {
-		Db.DropTableIfExists(book, part, page, historicalPage, tag, pageTag, sharedBook)
-		Db.CreateTable(book, part, page, historicalPage, tag, pageTag, sharedBook)
+		Db.DropTableIfExists(user, book, part, page, historicalPage, tag, pageTag, sharedBook)
+		Db.CreateTable(user, book, part, page, historicalPage, tag, pageTag, sharedBook)
 	}
 }

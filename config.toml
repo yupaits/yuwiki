@@ -2,6 +2,7 @@ debug = false
 log_file = "/logs/yuwiki.log"
 session_cookie = "wiki.session"
 secret = "yupaits"
+session_auth = "user"
 
 [http]
 port = "8000"

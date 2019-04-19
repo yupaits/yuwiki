@@ -10,6 +10,7 @@ type AppConfig struct {
 	LogFile       string `toml:"log_file"`
 	SessionCookie string `toml:"session_cookie"`
 	Secret        string `toml:"secret"`
+	SessionAuth   string `toml:"session_auth"`
 	Http          struct {
 		Port            string `toml:"port"`
 		Favicon         string `toml:"favicon"`
