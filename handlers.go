@@ -1,6 +1,8 @@
 package yuwiki
 
 import (
+	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"time"
@@ -52,8 +54,21 @@ type SortPage struct {
 }
 
 func checkLogin(c *gin.Context) (bool, *User, error) {
-	//TODO
-	return true, &User{}, nil
+	loginForm := &LoginForm{}
+	if err := c.ShouldBind(loginForm); err != nil {
+		return false, nil, err
+	}
+	if len(loginForm.Password) < 6 {
+		return false, nil, errors.New("密码长度不能小于6位")
+	}
+	user := &User{}
+	if err := Db.Where("username = ?", loginForm.Username).Find(user).Error; err != nil {
+		return false, nil, errors.New(fmt.Sprintf("用户 %s 不存在", loginForm.Username))
+	}
+	if Match(loginForm.Password, user.Salt, user.Password) {
+		return true, user, nil
+	}
+	return false, nil, nil
 }
 
 func getBooksHandler(c *gin.Context) {

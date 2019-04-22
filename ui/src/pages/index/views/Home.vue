@@ -444,9 +444,7 @@ export default {
         }
       });
       if (sortedBooks.length > 0) {
-        this.$api.sortBooks(sortedBooks).then(() => {
-          this.fetchBooks();
-        });
+        this.$api.sortBooks(sortedBooks);
       }
     },
     dropPart() {
@@ -458,9 +456,7 @@ export default {
         }
       });
       if (sortedParts.length > 0) {
-        this.$api.sortParts(sortedParts).then(() => {
-          this.fetchParts(this.$store.getters.bookId);
-        });
+        this.$api.sortParts(sortedParts);
       }
     },
     movePage(event) {
@@ -478,41 +474,47 @@ export default {
         }
       });
       if (sortedPages.length > 0) {
-        this.$api.sortPages(sortedPages).then(() => {
-          this.fetchPages(this.$store.getters.partId);
-        });
+        this.$api.sortPages(sortedPages);
       }
     },
     sortedData(sortData) {
       const sortedData = [];
       if (sortData && sortData.list && sortData.list.length > 0 && sortData.fromIndex !== sortData.toIndex) {
+        const list = [...sortData.list];
         if (sortData.fromIndex < sortData.toIndex) {
           const tempSortCode = sortData.list[sortData.toIndex].sortCode;
           for (let i = sortData.toIndex; i > sortData.fromIndex; i--) {
+            const sortCode = sortData.list[i - 1].sortCode;
             const data = {
               id: sortData.list[i].ID,
-              sortCode: sortData.list[i - 1].sortCode
+              sortCode: sortCode
             };
+            list[i].sortCode = sortCode;
             sortedData.push(JSON.parse(JSON.stringify(data)));
           }
           sortedData.push({
             id: sortData.list[sortData.fromIndex].ID,
             sortCode: tempSortCode
           });
+          list[sortData.fromIndex].sortCode = tempSortCode;
         } else if (sortData.fromIndex > sortData.toIndex) {
           const tempSortCode = sortData.list[sortData.toIndex].sortCode;
           for (let i = sortData.toIndex; i < sortData.fromIndex; i++) {
+            const sortCode = sortData.list[i + 1].sortCode;
             const data = {
               id: sortData.list[i].ID,
-              sortCode: sortData.list[i + 1].sortCode
+              sortCode: sortCode
             };
+            list[i].sortCode = sortCode;
             sortedData.push(JSON.parse(JSON.stringify(data)));
           }
           sortedData.push({
             id: sortData.list[sortData.fromIndex].ID,
             sortCode: tempSortCode
           });
+          list[sortData.fromIndex].sortCode = tempSortCode;
         }
+        sortData.list = list;
       }
       return sortedData;
     }

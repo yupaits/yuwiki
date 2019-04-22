@@ -8,6 +8,7 @@ import (
 const (
 	FAIL             = 10000
 	LoginFail        = 10001
+	InvalidSession   = 10002
 	ParamsError      = 11001
 	DataNotFound     = 11002
 	DataCannotDelete = 11003
@@ -23,6 +24,7 @@ const (
 var messages = map[int]string{
 	FAIL:             "系统异常",
 	LoginFail:        "用户名或密码错误",
+	InvalidSession:   "无效的Session信息",
 	ParamsError:      "参数校验失败",
 	DataNotFound:     "查找的数据不存在或已被删除",
 	DataCannotDelete: "数据无法删除",

@@ -1,6 +1,7 @@
 package yuwiki
 
 import (
+	"encoding/gob"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -41,35 +42,44 @@ func Run() {
 		Secure:   true,
 		HttpOnly: true,
 	})
-	sessionMid := sessions.Sessions(Config.SessionCookie, store)
-	authorize := NewAuthMid(sessionMid)
+	r.Use(sessions.Sessions(Config.SessionCookie, store))
+
+	gob.Register(User{})
+	authorize := NewAuthMid()
 
 	r.Static("/static", Config.Http.StaticPath)
 	r.StaticFile("/favicon.ico", Config.Http.Favicon)
-	//r.LoadHTMLGlob(Config.Http.HtmlPathPattern)
-	r.LoadHTMLFiles("./templates/login.html", "./ui/dist/index.html")
+	r.LoadHTMLGlob(Config.Http.HtmlPathPattern)
 
 	r.GET("/logout", authorize, func(c *gin.Context) {
 		session := sessions.Default(c)
-		session.Delete(Config.SessionAuth)
-		if err := session.Save(); err != nil {
-
+		userId := session.Get(Config.SessionAuth)
+		if userId == nil {
+			Result(c, CodeFail(InvalidSession))
+		} else {
+			session.Delete(Config.SessionAuth)
+			if err := session.Save(); err != nil {
+				Result(c, MsgFail(err.Error()))
+			} else {
+				Result(c, Ok())
+			}
 		}
 	})
 
 	r.POST("/login", func(c *gin.Context) {
 		session := sessions.Default(c)
 		if ok, user, err := checkLogin(c); ok {
-			session.Set(Config.SessionAuth, user)
+			session.Set(Config.SessionAuth, user.ID)
 			if err := session.Save(); err != nil {
-				//TODO
+				Result(c, MsgFail(err.Error()))
+			} else {
+				Result(c, Ok())
 			}
 		} else if err != nil {
-			c.HTML(http.StatusOK, "login.html", gin.H{})
+			Result(c, MsgFail(err.Error()))
 		} else {
-			c.HTML(http.StatusOK, "login.html", gin.H{})
+			Result(c, CodeFail(LoginFail))
 		}
-
 	})
 
 	r.GET("/login", func(c *gin.Context) {

@@ -1,6 +1,9 @@
 import client from './client'
 
 export default {
+  login(loginForm) {
+    return client.post('/login', loginForm);
+  },
   getBooks() {
     return client.get('/books');
   },

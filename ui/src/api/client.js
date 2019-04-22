@@ -21,7 +21,7 @@ client.interceptors.response.use(res => {
     return Promise.reject(error);
   }
   if (error.response.status === 401) {
-    utils.http.goPage('/login');
+    window.location.replace('/login');
   }
   if (error.response.status === 403) {
     message.error('请求失败，无访问权限');
