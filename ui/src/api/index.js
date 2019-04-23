@@ -4,6 +4,9 @@ export default {
   login(loginForm) {
     return client.post('/login', loginForm);
   },
+  signup(signupForm) {
+    return client.post('/signup', signupForm);
+  },
   getBooks() {
     return client.get('/books');
   },

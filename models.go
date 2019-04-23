@@ -134,10 +134,12 @@ func saveUser(user *User) bool {
 		//设置初始化密码
 		salt := GenSalt()
 		user.Salt = salt
-		password := GenPassword()
-		user.InitPassword = password
-		user.PasswordChanged = false
-		user.Password, _ = EncPassword(password, salt)
+		if user.Password == "" {
+			password := GenPassword()
+			user.InitPassword = password
+			user.PasswordChanged = false
+			user.Password, _ = EncPassword(password, salt)
+		}
 		err = Db.Create(user).Error
 	} else {
 		user.InitPassword = ""

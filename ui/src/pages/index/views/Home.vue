@@ -285,7 +285,11 @@ export default {
       });
     },
     handleUserOpt({key}) {
-      alert(key);
+      switch (key) {
+        case 'logout':
+          window.location.replace('/logout');
+          break;
+      }
     },
     showModal(type, key) {
       this.modal = {

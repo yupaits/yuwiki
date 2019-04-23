@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"regexp"
 	"strconv"
 	"time"
 )
@@ -11,6 +12,13 @@ import (
 type LoginForm struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
+}
+
+type SignUpForm struct {
+	Username        string `json:"username" binding:"required"`
+	Email           string `json:"email" binding:"required"`
+	Password        string `json:"password" binding:"required"`
+	ConfirmPassword string `json:"confirmPassword" binding:"required"`
 }
 
 type PageDto struct {
@@ -69,6 +77,43 @@ func checkLogin(c *gin.Context) (bool, *User, error) {
 		return true, user, nil
 	}
 	return false, nil, nil
+}
+
+func signUpHandler(c *gin.Context) {
+	signUpForm := &SignUpForm{}
+	if err := c.ShouldBind(signUpForm); err != nil {
+		Result(c, CodeFail(ParamsError))
+		return
+	}
+	emailReg := regexp.MustCompile(`^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$`)
+	if !emailReg.MatchString(signUpForm.Email) {
+		Result(c, MsgFail("邮箱格式有误"))
+		return
+	}
+	if signUpForm.Password != signUpForm.ConfirmPassword {
+		Result(c, MsgFail("两次输入的密码不一致"))
+		return
+	}
+	dbUser := &User{}
+	Db.Where("username = ?", signUpForm.Username).Find(dbUser)
+	if dbUser.ID != 0 {
+		Result(c, MsgFail(fmt.Sprintf("用户 %s 已存在", signUpForm.Username)))
+		return
+	}
+	salt := GenSalt()
+	user := &User{
+		Username:        signUpForm.Username,
+		Email:           signUpForm.Email,
+		InitPassword:    "",
+		PasswordChanged: true,
+		Salt:            salt,
+	}
+	user.Password, _ = EncPassword(signUpForm.Password, salt)
+	if err := Db.Create(user).Error; err != nil {
+		Result(c, MsgFail("注册账号失败"))
+	} else {
+		Result(c, Ok())
+	}
 }
 
 func getBooksHandler(c *gin.Context) {

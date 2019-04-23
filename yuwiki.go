@@ -37,10 +37,8 @@ func Run() {
 
 	store := cookie.NewStore([]byte(Config.Secret))
 	store.Options(sessions.Options{
-		MaxAge:   86400,
-		Path:     "/",
-		Secure:   true,
-		HttpOnly: true,
+		MaxAge: 86400,
+		Path:   "/",
 	})
 	r.Use(sessions.Sessions(Config.SessionCookie, store))
 
@@ -57,18 +55,18 @@ func Run() {
 		if userId == nil {
 			Result(c, CodeFail(InvalidSession))
 		} else {
-			session.Delete(Config.SessionAuth)
+			session.Clear()
 			if err := session.Save(); err != nil {
 				Result(c, MsgFail(err.Error()))
 			} else {
-				Result(c, Ok())
+				c.Redirect(http.StatusFound, "/login")
 			}
 		}
 	})
 
 	r.POST("/login", func(c *gin.Context) {
 		session := sessions.Default(c)
-		if ok, user, err := checkLogin(c); ok {
+		if ok, user, err := checkLogin(c); ok && user != nil {
 			session.Set(Config.SessionAuth, user.ID)
 			if err := session.Save(); err != nil {
 				Result(c, MsgFail(err.Error()))
@@ -82,13 +80,26 @@ func Run() {
 		}
 	})
 
+	r.POST("/signup", signUpHandler)
+
 	r.GET("/login", func(c *gin.Context) {
+		userId := sessions.Default(c).Get(Config.SessionAuth)
+		if userId != nil {
+			userId := userId.(uint)
+			if userId > 0 {
+				c.Redirect(http.StatusFound, "/")
+				return
+			}
+		}
 		c.HTML(http.StatusOK, "login.html", gin.H{})
 	})
-	r.GET("/", func(c *gin.Context) {
+	r.GET("/signup", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "signup.html", gin.H{})
+	})
+	r.GET("/", authorize, func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{})
 	})
-	r.GET("/index", func(c *gin.Context) {
+	r.GET("/index", authorize, func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{})
 	})
 

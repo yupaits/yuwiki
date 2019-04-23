@@ -19,7 +19,13 @@ func NewAuthMid() gin.HandlerFunc {
 				return
 			}
 		}
-		c.AbortWithStatus(http.StatusUnauthorized)
+		if c.Request.Header.Get("X-Requested-With") == "XMLHttpRequest" {
+			//异步请求返回401状态码
+			c.AbortWithStatus(http.StatusUnauthorized)
+		} else {
+			//重定向到登录页面
+			c.Redirect(http.StatusFound, "/login")
+		}
 	}
 }
 

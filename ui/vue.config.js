@@ -7,6 +7,10 @@ module.exports = {
     login: {
       entry: 'src/pages/login/main.js',
       title: '登录 | 知识库'
+    },
+    signup: {
+      entry: 'src/pages/signup/main.js',
+      title: '注册账号 | 知识库'
     }
   },
   devServer: {
