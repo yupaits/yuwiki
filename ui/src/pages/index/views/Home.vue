@@ -128,9 +128,16 @@
         </a-row>
       </a-layout-content>
       <a-layout-footer style="text-align: center">
-        <b>YuWiki</b> ©2019 <b><a href="https://github.com/YupaiTS" target="_blank">YupaiTS</a></b> 版权所有
+        <b>YuWiki</b> ©2019 <b><a href="https://github.com/yupaits" target="_blank">yupaits</a></b> 版权所有
       </a-layout-footer>
     </a-layout>
+
+    <a-modal :visible="modifyPwVisible" @cancel="modifyPwVisible = false" @ok="handleModifyPasswd">
+      <template slot="title">
+        <a-icon type="key"/> 修改密码
+      </template>
+      <modify-password-form :passwordModify="passwordModify" @update="modify => {this.passwordModify = modify}"></modify-password-form>
+    </a-modal>
 
     <a-modal :visible.sync="modal.visible" @cancel="closeModal" @ok="modal.ok">
       <template slot="title">
@@ -147,6 +154,7 @@ import BookForm from '../components/form/BookForm'
 import PartForm from '../components/form/PartForm'
 import PageForm from '../components/form/PageForm'
 import PartTree from "../components/PartTree"
+import ModifyPasswordForm from '../components/form/ModifyPasswordForm'
 import config from '../config'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -157,7 +165,7 @@ dayjs.extend(relativeTime)
 
 export default {
   components: {
-    draggable, PartTree
+    draggable, PartTree, ModifyPasswordForm
   },
   data() {
     return {
@@ -219,7 +227,9 @@ export default {
           fromIndex: 0,
           toIndex: 0
         }
-      }
+      },
+      modifyPwVisible: false,
+      passwordModify: {}
     }
   },
   computed: {
@@ -286,10 +296,20 @@ export default {
     },
     handleUserOpt({key}) {
       switch (key) {
+        case 'modify-passwd':
+          this.passwordModify = {};
+          this.modifyPwVisible = true;
+          break;
         case 'logout':
           window.location.replace('/logout');
           break;
       }
+    },
+    handleModifyPasswd() {
+      this.$api.modifyPassword(this.passwordModify).then(() => {
+        this.$message.success('修改密码成功');
+        this.modifyPwVisible = false;
+      });
     },
     showModal(type, key) {
       this.modal = {

@@ -155,7 +155,7 @@ func modifyPassword(modify *PasswordModify) (bool, string) {
 	if modify.OldPassword == "" || modify.NewPassword == "" || modify.ConfirmPassword == "" {
 		return false, "原密码、新密码、确认密码均不能为空"
 	}
-	if strings.Compare(modify.NewPassword, modify.ConfirmPassword) == 0 {
+	if strings.Compare(modify.NewPassword, modify.ConfirmPassword) != 0 {
 		return false, "新密码和确认密码不匹配"
 	}
 	if strings.Compare(modify.OldPassword, modify.NewPassword) == 0 {
@@ -171,6 +171,10 @@ func modifyPassword(modify *PasswordModify) (bool, string) {
 	}
 	user.Password = password
 	user.PasswordChanged = true
+	user.InitPassword = ""
+	if err := Db.Save(user).Error; err != nil {
+		return false, "更新密码失败"
+	}
 	return true, ""
 }
 
