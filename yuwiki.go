@@ -143,6 +143,7 @@ func Run() {
 	user := r.Group("/user").Use(authorize)
 	{
 		user.GET("", getUserInfoHandler)
+		user.PUT("/edit", editUserHandler)
 		user.PUT("/modify-password", modifyPasswordHandler)
 	}
 

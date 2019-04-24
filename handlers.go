@@ -271,6 +271,10 @@ func getUserInfoHandler(c *gin.Context) {
 	}
 }
 
+func editUserHandler(c *gin.Context) {
+
+}
+
 func modifyPasswordHandler(c *gin.Context) {
 	modify := &PasswordModify{}
 	if err := c.ShouldBind(modify); err != nil {

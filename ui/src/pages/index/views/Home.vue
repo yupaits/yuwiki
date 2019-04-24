@@ -22,12 +22,13 @@
           <a-dropdown placement="bottomRight">
             <a-menu slot="overlay" @click="handleUserOpt">
               <a-menu-item key="share-book"><a-icon type="share-alt"/>共享笔记本</a-menu-item>
+              <a-menu-item key="profile"><a-icon type="setting"/>个人设置</a-menu-item>
               <a-menu-item key="modify-passwd"><a-icon type="key"/>修改密码</a-menu-item>
               <a-menu-item key="logout"><a-icon type="logout"/>注销登录</a-menu-item>
             </a-menu>
             <span class="user-holder ml-1">
-              <a-avatar size="small" shape="square" icon="user"></a-avatar>
-              <span class="ml-1">yupaits</span> <a-icon type="down"/>
+              <a-avatar size="small" shape="square" icon="user" :src="$store.getters.user.avatar"></a-avatar>
+              <span class="ml-1">{{$store.getters.user.username}}</span> <a-icon type="down"/>
             </span>
           </a-dropdown>
         </span>
@@ -296,6 +297,9 @@ export default {
     },
     handleUserOpt({key}) {
       switch (key) {
+        case 'profile':
+          this.$router.push('/profile');
+          break;
         case 'modify-passwd':
           this.passwordModify = {};
           this.modifyPwVisible = true;

@@ -28,6 +28,9 @@ export default {
   getUserInfo() {
     return client.get('/user');
   },
+  updateUser(user) {
+    return client.put(`/user/edit`, user);
+  },
   viewPage(pageId, editable) {
     return client.get(`/pages/${pageId}?editable=${editable}`);
   },
