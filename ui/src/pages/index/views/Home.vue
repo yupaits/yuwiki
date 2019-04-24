@@ -109,10 +109,10 @@
                   <transition-group>
                     <div v-for="page in pages" :key="page.ID" class="page-item" :class="{'active': $store.getters.pageId === page.ID}" @click="selectPage(page.ID)">
                       <div><a-icon type="file-text"/> {{page.title}}</div>
-                      <div class="page-tags" v-if="page.tags && page.tags.length > 0"><a-icon type="tags"/> {{page.tags.join(', ')}}</div>
-                      <div class="page-time">
+                      <div class="page-addition">
                         <a-icon type="clock-circle"/> 创建于 
                         <span :title="dayjs(page.CreatedAt).format('YYYY-MM-DD HH:mm:ss')">{{dayjs().from(dayjs(page.CreatedAt))}}</span>
+                        <span class="ml-1" v-if="page.tags && page.tags.length > 0"><a-icon type="tags"/> {{page.tags.join(', ')}}</span>
                       </div>
                     </div>
                   </transition-group>
@@ -622,7 +622,7 @@ export default {
   z-index: 0;
   height: 100%;
 }
-.page-tags,.page-time {
+.page-addition {
   line-height: 20px;
   font-size: 12px;
   color: #8c8c8c;
