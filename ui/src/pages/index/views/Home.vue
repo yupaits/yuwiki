@@ -28,7 +28,7 @@
             </a-menu>
             <span class="user-holder ml-1">
               <a-avatar size="small" shape="square" icon="user" :src="$store.getters.user.avatar"></a-avatar>
-              <span class="ml-1">{{$store.getters.user.username}}</span> <a-icon type="down"/>
+              <span class="ml-1">{{$store.getters.user.nickname || $store.getters.user.username}}</span> <a-icon type="down"/>
             </span>
           </a-dropdown>
         </span>
@@ -112,7 +112,7 @@
                       <div><a-icon type="file-text"/> {{page.title}}</div>
                       <div class="page-addition">
                         <a-icon type="clock-circle"/> 创建于 
-                        <span :title="dayjs(page.CreatedAt).format('YYYY-MM-DD HH:mm:ss')">{{dayjs().from(dayjs(page.CreatedAt))}}</span>
+                        <span :title="dayjs(page.CreatedAt).format('YYYY年MM月DD日 HH:mm:ss')">{{dayjs().from(dayjs(page.CreatedAt))}}</span>
                         <span class="ml-1" v-if="page.tags && page.tags.length > 0"><a-icon type="tags"/> {{page.tags.join(', ')}}</span>
                       </div>
                     </div>

@@ -21,6 +21,15 @@ type SignUpForm struct {
 	ConfirmPassword string `json:"confirmPassword" binding:"required"`
 }
 
+type UserProfile struct {
+	Avatar   string `json:"avatar"`
+	Nickname string `json:"nickname"`
+	Phone    string `json:"phone"`
+	Email    string `json:"email" binding:"required"`
+	Gender   int8   `json:"gender"`
+	Birthday string `json:"birthday"`
+}
+
 type PageDto struct {
 	ID        uint     `json:"id"`
 	BookId    uint     `json:"bookId" binding:"required"`
@@ -272,7 +281,24 @@ func getUserInfoHandler(c *gin.Context) {
 }
 
 func editUserHandler(c *gin.Context) {
-
+	userProfile := &UserProfile{}
+	if err := c.ShouldBind(userProfile); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if user, err := currentUser(); err != nil {
+		Result(c, MsgFail(err.Error()))
+	} else {
+		user.Avatar = userProfile.Avatar
+		user.Nickname = userProfile.Nickname
+		user.Phone = userProfile.Phone
+		user.Email = userProfile.Email
+		user.Gender = userProfile.Gender
+		user.Birthday, _ = time.ParseInLocation("2006-01-02 15:04:05", userProfile.Birthday+" 00:00:00", time.Local)
+		if err := Db.Save(user).Error; err != nil {
+			Result(c, CodeFail(UpdateFail))
+		} else {
+			Result(c, Ok())
+		}
+	}
 }
 
 func modifyPasswordHandler(c *gin.Context) {

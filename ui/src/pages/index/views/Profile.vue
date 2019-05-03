@@ -17,8 +17,8 @@
             <a-form-item label="用户名" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper" required>
               <span>{{user.username}}</span>
             </a-form-item>
-            <a-form-item label="姓名" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper" required>
-              <a-input v-model="user.name" placeholder="请输入姓名"></a-input>
+            <a-form-item label="昵称" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper">
+              <a-input v-model="user.nickname" placeholder="请输入昵称"></a-input>
             </a-form-item>
             <a-form-item label="电子邮箱" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper" required>
               <a-input v-model="user.email" placeholder="请填写邮箱地址"></a-input>
@@ -31,7 +31,7 @@
             </a-form-item>
             <a-form-item label="性别" :labelCol="$styles.form.label" :wrapperCol="$styles.form.wrapper">
               <a-radio-group v-model="user.gender">
-                <a-radio-button v-for="(gender, name) in $messages.enums.gender" :key="name" :value="name">
+                <a-radio-button v-for="(gender, code) in $messages.enums.gender" :key="code" :value="parseInt(code)">
                   <a-icon :type="gender.icon"/> {{gender.label}}
                 </a-radio-button>
               </a-radio-group>
@@ -65,6 +65,7 @@ export default {
       return current >= moment().endOf('day');
     },
     saveProfile() {
+      this.user.birthday = this.user.birthday.substring(0, 10);
       this.$api.updateUser(this.user).then(() => {
         this.$store.dispatch('setUser', this.user);
         this.$message.success(this.$messages.result.updateSuccess);
