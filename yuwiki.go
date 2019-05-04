@@ -153,6 +153,6 @@ func Run() {
 
 	StartScheduler()
 
-	log.Fatal(r.Run(":" + Config.Http.Port))
 	log.Println("yuwiki启动成功，端口:", Config.Http.Port)
+	log.Fatal(r.Run(":" + Config.Http.Port))
 }
