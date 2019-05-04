@@ -22,6 +22,9 @@ type AppConfig struct {
 		Url       string `toml:"url"`
 		DdlUpdate bool   `toml:"ddl_update"`
 	} `toml:"dataSource"`
+	Cron struct {
+		Backup string `toml:"backup"`
+	} `toml:"cron"`
 }
 
 func InitConfig() *AppConfig {

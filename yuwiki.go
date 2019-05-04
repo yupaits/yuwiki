@@ -151,5 +151,8 @@ func Run() {
 	r.GET("/star/items", authorize, getStarItemsHandler)
 	r.POST("/site/search", authorize, siteSearchHandler)
 
+	StartScheduler()
+
 	log.Fatal(r.Run(":" + Config.Http.Port))
+	log.Println("yuwiki启动成功，端口:", Config.Http.Port)
 }

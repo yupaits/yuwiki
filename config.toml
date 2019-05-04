@@ -14,3 +14,6 @@ html_path_pattern = "ui/dist/*.html"
 dialect = "sqlite3"
 url = "/db/yuwiki.db"
 ddl_update = true
+
+[cron]
+backup = "0 0 11 * * *"
