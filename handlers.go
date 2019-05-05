@@ -49,12 +49,6 @@ type PasswordModify struct {
 	ConfirmPassword string `json:"confirmPassword" binding:"required"`
 }
 
-type StarItems struct {
-	Books *[]Book `json:"books"`
-	Parts *[]Part `json:"parts"`
-	Pages *[]Page `json:"pages"`
-}
-
 type SortBook struct {
 	BookId   uint `json:"bookId"`
 	SortCode uint `json:"sortCode"`
@@ -312,12 +306,13 @@ func modifyPasswordHandler(c *gin.Context) {
 	}
 }
 
-func getStarItemsHandler(c *gin.Context) {
-	Result(c, OkData(getStarItems()))
-}
-
 func siteSearchHandler(c *gin.Context) {
-
+	keyword := c.DefaultQuery("keyword", "")
+	if keyword == "" {
+		Result(c, Ok())
+	} else {
+		Result(c, OkData(searchPagesByKeyword(keyword)))
+	}
 }
 
 func sortBooksHandler(c *gin.Context) {

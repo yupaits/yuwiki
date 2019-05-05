@@ -151,8 +151,7 @@ func Run() {
 	}
 
 	r.GET("/shared/books", authorize, getSharedBooksHandler)
-	r.GET("/star/items", authorize, getStarItemsHandler)
-	r.POST("/site/search", authorize, siteSearchHandler)
+	r.GET("/site/search", authorize, siteSearchHandler)
 
 	StartScheduler()
 

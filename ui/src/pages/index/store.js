@@ -13,6 +13,7 @@ export default new Vuex.Store({
     partId: undefined,
     pageId: undefined,
     part: {},
+    keyword: '',
     menuVisible: true,
     sortPart: {
       list: [],
@@ -41,6 +42,9 @@ export default new Vuex.Store({
     },
     part(state) {
       return state.part;
+    },
+    keyword(state) {
+      return state.keyword;
     },
     menuVisible(state) {
       return state.menuVisible;
@@ -77,6 +81,9 @@ export default new Vuex.Store({
     setPart(state, part) {
       state.part = part;
     },
+    setKeyword(state, keyword) {
+      state.keyword = keyword;
+    },
     setMenuVisible(state, visible) {
       state.menuVisible = visible;
     },
@@ -111,6 +118,9 @@ export default new Vuex.Store({
     },
     setPart({commit}, part) {
       commit('setPart', part);
+    },
+    setKeyword({commit}, keyword) {
+      commit('setKeyword', keyword);
     },
     setMenuVisible({commit}, visible) {
       commit('setMenuVisible', visible);

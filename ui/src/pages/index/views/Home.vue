@@ -1,6 +1,6 @@
 <template>
   <div>
-    <a-layout id="components-layout-demo-top" class="layout">
+    <a-layout>
       <a-layout-header>
         <span class="logo">
           <img src="favicon.ico" alt="YuWIki">
@@ -8,7 +8,7 @@
         </span>
         <span class="pull-right">
           <a-button :icon="$store.getters.menuVisible ? 'menu-fold' : 'menu-unfold'" @click="toggleMenuVisible"></a-button>
-          <a-input-search class="search-input ml-1"></a-input-search>
+          <a-input-search class="search-input ml-1" placeholder="输入关键字进行搜索" @search="search"></a-input-search>
           <a-dropdown>
             <a-menu slot="overlay" @click="handleCreate">
               <a-menu-item key="book"><a-icon type="book"/>笔记本</a-menu-item>
@@ -19,6 +19,7 @@
               新建 <a-icon type="down"/>
             </a-button>
           </a-dropdown>
+          <a-button icon="share-alt" class="ml-1" @click="sharedBooks">分享给我</a-button>
           <a-dropdown placement="bottomRight">
             <a-menu slot="overlay" @click="handleUserOpt">
               <a-menu-item key="share-book"><a-icon type="share-alt"/>共享笔记本</a-menu-item>
@@ -40,12 +41,12 @@
               <div class="holder">
                 <h3 class="text-title text-bold holder-header">
                   <a-icon type="book"/> 笔记本
-                  <a-button size="small" icon="sync" @click="fetchBooks"></a-button>
+                  <a-button size="small" icon="sync" title="刷新" @click="fetchBooks"></a-button>
                   <span class="pull-right" v-if="$store.getters.bookId">
-                    <a-button size="small" icon="star" class="mr-1" :style="{color: $store.getters.bookStar ? '#fadb14' : ''}" @click="toggleStarBook"></a-button>
-                    <a-button size="small" icon="edit" class="mr-1" @click="editBook"></a-button>
+                    <a-button size="small" icon="star" class="mr-1" :style="{color: $store.getters.bookStar ? '#fadb14' : ''}" title="设为/取消星标" @click="toggleStarBook"></a-button>
+                    <a-button size="small" icon="edit" class="mr-1" title="编辑" @click="editBook"></a-button>
                     <a-popconfirm title="确定删除此笔记本吗？" placement="right" @confirm="handleDeleteBook">
-                      <a-button size="small" icon="delete"></a-button>
+                      <a-button size="small" icon="delete" title="删除"></a-button>
                     </a-popconfirm>
                   </span>
                 </h3>
@@ -66,12 +67,12 @@
                 <h3 class="text-title text-bold holder-header">
                   <a-icon type="folder-open"/> 分区
                   <span v-if="$store.getters.bookId">
-                    <a-button size="small" icon="sync" class="ml-1" @click="fetchParts($store.getters.bookId)"></a-button>
+                    <a-button size="small" icon="sync" class="ml-1" title="刷新" @click="fetchParts($store.getters.bookId)"></a-button>
                     <span class="pull-right" v-if="$store.getters.partId">
-                      <a-button size="small" icon="star" class="mr-1" :style="{color: $store.getters.partStar ? '#fadb14' : ''}" @click="toggleStarPart"></a-button>
-                      <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
+                      <a-button size="small" icon="star" class="mr-1" :style="{color: $store.getters.partStar ? '#fadb14' : ''}" title="设为/取消星标" @click="toggleStarPart"></a-button>
+                      <a-button size="small" icon="edit" class="mr-1" title="编辑" @click="editPart"></a-button>
                       <a-popconfirm title="确定删除此分区吗？" placement="right" @confirm="handleDeletePart">
-                        <a-button size="small" icon="delete"></a-button>
+                        <a-button size="small" icon="delete" title="删除"></a-button>
                       </a-popconfirm>
                     </span>
                   </span>
@@ -98,13 +99,13 @@
               <h3 class="text-title text-bold holder-header">
                 <a-icon type="file-text"/> 页面
                 <span v-if="$store.getters.partId">
-                  <a-button size="small" icon="sync" class="ml-1" @click="fetchPages($store.getters.partId)"></a-button>
+                  <a-button size="small" icon="sync" class="ml-1" title="刷新" @click="fetchPages($store.getters.partId)"></a-button>
                   <span class="pull-right" v-if="$store.getters.pageId">
                     <a-button size="small" icon="form" class="mr-3" @click="toEditor"></a-button>
-                    <a-button size="small" icon="star" class="mr-1" :style="{color: $store.getters.pageStar ? '#fadb14' : ''}" @click="toggleStarPage"></a-button>
-                    <a-button size="small" icon="edit" class="mr-1" @click="editPage"></a-button>
+                    <a-button size="small" icon="star" class="mr-1" :style="{color: $store.getters.pageStar ? '#fadb14' : ''}" title="设为/取消星标" @click="toggleStarPage"></a-button>
+                    <a-button size="small" icon="edit" class="mr-1" title="编辑" @click="editPage"></a-button>
                     <a-popconfirm title="确定删除此页面吗？" placement="right" @confirm="handleDeletePage">
-                      <a-button size="small" icon="delete"></a-button>
+                      <a-button size="small" icon="delete" title="删除"></a-button>
                     </a-popconfirm>
                   </span>
                 </span>
@@ -293,6 +294,13 @@ export default {
     toggleMenuVisible() {
       this.$store.dispatch('setMenuVisible', !this.$store.getters.menuVisible);
     },
+    search(keyword) {
+      this.$store.dispatch('setKeyword', keyword);
+      this.$router.push('/search');
+    },
+    sharedBooks() {
+      this.$router.push('/books/shared');
+    },
     viewPage() {
       this.loading.pageView = true;
       this.$api.viewPage(this.$store.getters.pageId, false).then(res => {
@@ -304,6 +312,9 @@ export default {
     },
     handleUserOpt({key}) {
       switch (key) {
+        case 'share-book':
+          this.$router.push('/book/share');
+          break;
         case 'profile':
           this.$router.push('/profile');
           break;
@@ -605,6 +616,7 @@ export default {
   background: #f0f2f5;
 }
 .logo {
+  cursor: pointer;
   font-size: 24px;
   line-height: 64px;
 }

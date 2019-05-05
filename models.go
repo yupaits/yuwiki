@@ -274,7 +274,8 @@ func savePart(part *Part) (bool, error) {
 	}
 	if part.SortCode == 0 {
 		var maxCode maxSortCode
-		if err := Db.Raw("SELECT MAX(parts.sort_code) AS max FROM parts WHERE parent_id = ? AND owner = ?", part.ParentId, getUserId()).Scan(&maxCode).Error; err != nil {
+		if err := Db.Raw("SELECT MAX(parts.sort_code) AS max FROM parts WHERE parent_id = ? AND owner = ?",
+			part.ParentId, getUserId()).Scan(&maxCode).Error; err != nil {
 			maxCode.Max = 0
 		}
 		part.SortCode = maxCode.Max + 1
@@ -323,7 +324,7 @@ func getPartPages(partId uint) *[]PageVo {
 	var pageVos []PageVo
 	for _, page := range *pages {
 		pageVo := PageVo{Page: page}
-		page.Content = ""
+		pageVo.Content = ""
 		setPageTags(&pageVo)
 		pageVos = append(pageVos, pageVo)
 	}
@@ -340,9 +341,8 @@ func getPage(id uint, editable bool) *PageVo {
 	//页面处于草稿状态时，返回最近发布的页面内容
 	if !page.Published && !editable {
 		historicalPage := &HistoricalPage{}
-		if err := Db.Where("page_id = ?", page.ID).Order("created_at DESC").Limit(1).Find(historicalPage).Error; err == nil {
-			page.Content = historicalPage.Content
-		}
+		Db.Where("page_id = ?", page.ID).Order("created_at DESC").Limit(1).Find(historicalPage)
+		pageVo.Content = historicalPage.Content
 	}
 	return &pageVo
 }
@@ -417,7 +417,8 @@ func savePage(pageDto *PageDto) bool {
 			}
 		}
 		//删除无效的页面标签关联记录
-		if err := Db.Where("page_id = ?", page.ID).Not("tag_id", tagIds).Delete(PageTag{}).Error; err != nil {
+		if err := Db.Where("page_id = ?", page.ID).Not("tag_id", tagIds).
+			Delete(PageTag{}).Error; err != nil {
 			log.Fatal(fmt.Sprintf("删除页面标签管理记录失败，pageId: %d，排除的tagIds: %v", page.ID, tagIds), err)
 		}
 	} else {
@@ -492,16 +493,20 @@ func saveSharedBook(sharedBook *SharedBook) bool {
 	return err == nil
 }
 
-func getStarItems() *StarItems {
-	var starBooks []Book
-	var starParts []Part
-	var starPages []Page
-	starItems := &StarItems{
-		Books: &starBooks,
-		Parts: &starParts,
-		Pages: &starPages,
+func searchPagesByKeyword(keyword string) *[]PageVo {
+	keyword = "%" + keyword + "%"
+	pages := &[]Page{}
+	if err := Db.Where("(title LIKE ? OR content LIKE ?) AND owner = ?", keyword, keyword, getUserId()).Order("updated_at DESC").Find(pages).Error; err != nil {
+		log.Fatal(fmt.Sprintf("根据关键字查找页面失败，keyword: %s ", keyword), err)
 	}
-	return starItems
+	var pageVos []PageVo
+	for _, page := range *pages {
+		pageVo := PageVo{Page: page}
+		pageVo.Content = ""
+		setPageTags(&pageVo)
+		pageVos = append(pageVos, pageVo)
+	}
+	return &pageVos
 }
 
 func sortBooks(sortedBooks *[]SortBook) (bool, error) {
