@@ -25,9 +25,11 @@ func backup() {
 	dbFileSha1, _ := FileSha1(dbFile)
 	yesterdayFileSha1, _ := FileSha1(yesterdayBackupFile)
 	if dbFileSha1 == yesterdayFileSha1 {
-		//无增量更新数据时直接重命名备份文件
+		//无增量数据时直接重命名备份文件
 		if err := os.Rename(yesterdayBackupFile, todayBackupFile); err != nil {
-			log.Fatalf("重命名备份文件失败，文件名：%s", yesterdayBackupFile)
+			log.Fatalf("重命名备份文件失败，文件名：%s， 错误信息：%v", yesterdayBackupFile, err)
+		} else {
+			log.Printf("重命名备份文件成功，文件名：%s, 新文件名：%s", yesterdayBackupFile, todayBackupFile)
 		}
 	} else if size, err := CopyFile(todayBackupFile, dbFile); err != nil {
 		log.Fatalf("数据库备份失败，错误信息：%v", err)

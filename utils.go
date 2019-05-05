@@ -28,7 +28,10 @@ const (
 	TERABYTE
 )
 
-const DateLayout = "2006-01-02"
+const (
+	DateLayout     = "2006-01-02"
+	DateTimeLayout = "2006-01-02 15:04:05"
+)
 
 //生成随机 Salt
 func GenSalt() string {
@@ -93,6 +96,11 @@ func FileSha1(fileName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Fatalln(err)
+		}
+	}()
 	hash := sha1.New()
 	_, err = io.Copy(hash, file)
 	if err != nil {
