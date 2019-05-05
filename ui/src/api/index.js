@@ -93,5 +93,10 @@ export default {
   },
   toggleStarPage(pageId) {
     return client.put(`/pages/${pageId}/star`);
+  },
+  uploadFile(file) {
+    let formdata = new FormData();
+    formdata.append('file', file);
+    return client.post('/upload', formdata, {'Content-Type': 'multipart/form-data'});
   }
 }

@@ -17,7 +17,7 @@
           </a-col>
         </a-row>
         <a-divider />
-        <a-row :gutter="16" class="search-container">
+        <a-row class="search-container">
           <a-col :span="8">
             <a-spin :spinning="loading">
               <div v-if="pages.length > 0">
@@ -39,9 +39,10 @@
               </div>
             </a-spin>
           </a-col>
-          <a-col :span="16">
+          <a-col :span="1"></a-col>
+          <a-col :span="15">
             <div class="holder" v-if="viewedPage.ID">
-              <mavon-editor :value="this.viewedPage.content" :toolbarsFlag="false" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
+              <mavon-editor :value="this.viewedPage.content" :toolbars="toolbars" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
             </div>
           </a-col>
         </a-row>
@@ -51,6 +52,7 @@
 </template>
 
 <script>
+import config from '../config'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
@@ -67,6 +69,7 @@ export default {
       pageId: undefined,
       viewedPage: {},
       dayjs,
+      toolbars: config.preivew.toolbars
     }
   },
   created() {
@@ -133,7 +136,7 @@ export default {
   line-height: 64px;
 }
 .search-container {
-  padding: 0 56px;
+  padding: 0 50px;
 }
 .list {
   height: calc(100vh - 230px);

@@ -153,6 +153,9 @@ func Run() {
 	r.GET("/shared/books", authorize, getSharedBooksHandler)
 	r.GET("/site/search", authorize, siteSearchHandler)
 
+	r.POST("/upload", authorize, uploadFileHandler)
+	r.GET("/file/:filename", authorize, downloadFileHandler)
+
 	StartScheduler()
 
 	log.Println("yuwiki启动成功，端口:", Config.Http.Port)

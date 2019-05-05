@@ -19,7 +19,7 @@ func StartScheduler() {
 func backup() {
 	dbFile := Config.DataSource.Url
 	suffix := ".db"
-	prefix := dbFile[0:strings.LastIndex(dbFile, suffix)] + "."
+	prefix := Config.Path.BackupPath + dbFile[0:strings.LastIndex(dbFile, suffix)] + "."
 	todayBackupFile := prefix + Today(DateLayout) + suffix
 	yesterdayBackupFile := prefix + Yesterday(DateLayout) + suffix
 	dbFileSha1, _ := FileSha1(dbFile)

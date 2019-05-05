@@ -25,6 +25,10 @@ type AppConfig struct {
 	Cron struct {
 		Backup string `toml:"backup"`
 	} `toml:"cron"`
+	Path struct {
+		UploadPath string `toml:"upload_path"`
+		BackupPath string `toml:"backup_path"`
+	} `toml:"path"`
 }
 
 func InitConfig() *AppConfig {

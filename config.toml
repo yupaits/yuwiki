@@ -1,5 +1,5 @@
 debug = false
-log_file = "/logs/yuwiki.log"
+log_file = "/yuwiki/logs/yuwiki.log"
 session_cookie = "wiki.session"
 secret = "yupaits"
 session_auth = "user"
@@ -12,8 +12,12 @@ html_path_pattern = "ui/dist/*.html"
 
 [dataSource]
 dialect = "sqlite3"
-url = "/db/yuwiki.db"
+url = "/yuwiki/db/yuwiki.db"
 ddl_update = true
 
 [cron]
 backup = "0 0 11 * * *"
+
+[path]
+upload_path = "/yuwiki/upload/"
+backup_path = "/yuwiki/backup/"
