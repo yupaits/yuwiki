@@ -18,7 +18,10 @@ export default new Vuex.Store({
       list: [],
       fromIndex: 0,
       toIndex: 0
-    }
+    },
+    bookStar: false,
+    partStar: false,
+    pageStar: false
   },
   getters: {
     user(state) {
@@ -44,6 +47,15 @@ export default new Vuex.Store({
     },
     sortPart(state) {
       return state.sortPart;
+    },
+    bookStar(state) {
+      return state.bookStar;
+    },
+    partStar(state) {
+      return state.partStar;
+    },
+    pageStar(state) {
+      return state.pageStar;
     }
   },
   mutations: {
@@ -70,6 +82,15 @@ export default new Vuex.Store({
     },
     setSortPart(state, sortPart) {
       state.sortPart = sortPart;
+    },
+    setBookStar(state, star) {
+      state.bookStar = star;
+    },
+    setPartStar(state, star) {
+      state.partStar = star;
+    },
+    setPageStar(state, star) {
+      state.pageStar = star;
     }
   },
   actions: {
@@ -96,6 +117,15 @@ export default new Vuex.Store({
     },
     setSortPart({commit}, sortPart) {
       commit('setSortPart', sortPart);
+    },
+    setBookStar({commit}, star) {
+      commit('setBookStar', star);
+    },
+    setPartStar({commit}, star) {
+      commit('setPartStar', star);
+    },
+    setPageStar({commit}, star) {
+      commit('setPageStar', star);
     }
   }
 })

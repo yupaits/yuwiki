@@ -87,5 +87,14 @@ export default {
   },
   sortPages(sortedPages) {
     return client.post(`/pages/sort`, sortedPages);
+  },
+  toggleStarBook(bookId) {
+    return client.put(`/books/${bookId}/star`);
+  },
+  toggleStarPart(partId) {
+    return client.put(`/parts/${partId}/star`);
+  },
+  toggleStarPage(pageId) {
+    return client.put(`/pages/${pageId}/star`);
   }
 }

@@ -42,6 +42,7 @@
                   <a-icon type="book"/> 笔记本
                   <a-button size="small" icon="sync" @click="fetchBooks"></a-button>
                   <span class="pull-right" v-if="$store.getters.bookId">
+                    <a-button size="small" icon="star" class="mr-1" :style="{color: $store.getters.bookStar ? '#fadb14' : ''}" @click="toggleStarBook"></a-button>
                     <a-button size="small" icon="edit" class="mr-1" @click="editBook"></a-button>
                     <a-popconfirm title="确定删除此笔记本吗？" placement="right" @confirm="handleDeleteBook">
                       <a-button size="small" icon="delete"></a-button>
@@ -51,8 +52,9 @@
                 <a-spin :spinning="loading.books" class="list">
                   <draggable v-model="books" :move="moveBook" @end="dropBook">
                     <transition-group>
-                      <div v-for="book in books" :key="book.ID" class="book-item" :class="{'active': $store.getters.bookId === book.ID}" @click="selectBook(book.ID)">
+                      <div v-for="book in books" :key="book.ID" class="book-item" :class="{'active': $store.getters.bookId === book.ID}" @click="selectBook(book)">
                         <a-icon type="book" theme="twoTone" :twoToneColor="book.color"/> {{book.name}}
+                        <span class="pull-right" v-if="book.star"><a-icon type="star" theme="filled" :style="{color: '#fadb14'}"/></span>
                       </div>
                     </transition-group>
                   </draggable>
@@ -66,6 +68,7 @@
                   <span v-if="$store.getters.bookId">
                     <a-button size="small" icon="sync" class="ml-1" @click="fetchParts($store.getters.bookId)"></a-button>
                     <span class="pull-right" v-if="$store.getters.partId">
+                      <a-button size="small" icon="star" class="mr-1" :style="{color: $store.getters.partStar ? '#fadb14' : ''}" @click="toggleStarPart"></a-button>
                       <a-button size="small" icon="edit" class="mr-1" @click="editPart"></a-button>
                       <a-popconfirm title="确定删除此分区吗？" placement="right" @confirm="handleDeletePart">
                         <a-button size="small" icon="delete"></a-button>
@@ -98,6 +101,7 @@
                   <a-button size="small" icon="sync" class="ml-1" @click="fetchPages($store.getters.partId)"></a-button>
                   <span class="pull-right" v-if="$store.getters.pageId">
                     <a-button size="small" icon="form" class="mr-3" @click="toEditor"></a-button>
+                    <a-button size="small" icon="star" class="mr-1" :style="{color: $store.getters.pageStar ? '#fadb14' : ''}" @click="toggleStarPage"></a-button>
                     <a-button size="small" icon="edit" class="mr-1" @click="editPage"></a-button>
                     <a-popconfirm title="确定删除此页面吗？" placement="right" @confirm="handleDeletePage">
                       <a-button size="small" icon="delete"></a-button>
@@ -108,8 +112,11 @@
               <a-spin :spinning="loading.pages" class="list">
                 <draggable v-model="pages" :move="movePage" @end="dropPage">
                   <transition-group>
-                    <div v-for="page in pages" :key="page.ID" class="page-item" :class="{'active': $store.getters.pageId === page.ID}" @click="selectPage(page.ID)">
-                      <div><a-icon type="file-text"/> {{page.title}}</div>
+                    <div v-for="page in pages" :key="page.ID" class="page-item" :class="{'active': $store.getters.pageId === page.ID}" @click="selectPage(page)">
+                      <div>
+                        <a-icon type="file-text"/> {{page.title}}
+                        <span class="pull-right" v-if="page.star"><a-icon type="star" theme="filled" :style="{color: '#fadb14'}"/></span>
+                      </div>
                       <div class="page-addition">
                         <a-icon type="clock-circle"/> 创建于 
                         <span :title="dayjs(page.CreatedAt).format('YYYY年MM月DD日 HH:mm:ss')">{{dayjs().from(dayjs(page.CreatedAt))}}</span>
@@ -330,8 +337,10 @@ export default {
     closeModal() {
       this.modal.visible = false;
     },
-    selectBook(bookId) {
+    selectBook(book) {
+      const bookId = book.ID;
       this.$store.dispatch('setBookId', bookId);
+      this.$store.dispatch('setBookStar', book.star);
       this.$store.dispatch('setPartId', undefined);
       this.$store.dispatch('setPageId', undefined);
       this.pages = [];
@@ -347,8 +356,10 @@ export default {
         this.fetchPages(partId);
       }
     },
-    selectPage(pageId) {
+    selectPage(page) {
+      const pageId = page.ID;
       this.$store.dispatch('setPageId', pageId);
+      this.$store.dispatch('setPageStar', page.star);
       if (pageId) {
         this.viewPage();
       }
@@ -545,6 +556,30 @@ export default {
         sortData.list = list;
       }
       return sortedData;
+    },
+    toggleStarBook() {
+      this.$api.toggleStarBook(this.$store.getters.bookId).then(() => {
+        this.$store.dispatch('setBookStar', !this.$store.getters.bookStar);
+        const msg = (this.$store.getters.bookStar ? '设为' : '取消') + '星标成功';
+        this.$message.success(msg);
+        this.fetchBooks();
+      });
+    },
+    toggleStarPart() {
+      this.$api.toggleStarPart(this.$store.getters.partId).then(() => {
+        this.$store.dispatch('setPartStar', !this.$store.getters.partStar);
+        const msg = (this.$store.getters.partStar ? '设为' : '取消') + '星标成功';
+        this.$message.success(msg);
+        this.fetchParts(this.$store.getters.bookId);
+      });
+    },
+    toggleStarPage() {
+      this.$api.toggleStarPage(this.$store.getters.pageId).then(() => {
+        this.$store.dispatch('setPageStar', !this.$store.getters.pageStar);
+        const msg = (this.$store.getters.pageStar ? '设为' : '取消') + '星标成功';
+        this.$message.success(msg);
+        this.fetchPages(this.$store.getters.partId);
+      });
     }
   }
 }

@@ -292,7 +292,7 @@ func editUserHandler(c *gin.Context) {
 		user.Phone = userProfile.Phone
 		user.Email = userProfile.Email
 		user.Gender = userProfile.Gender
-		user.Birthday, _ = time.ParseInLocation("2006-01-02 15:04:05", userProfile.Birthday+" 00:00:00", time.Local)
+		user.Birthday, _ = time.ParseInLocation(DateTimeLayout, userProfile.Birthday+" 00:00:00", time.Local)
 		if err := Db.Save(user).Error; err != nil {
 			Result(c, CodeFail(UpdateFail))
 		} else {
@@ -356,5 +356,35 @@ func sortPagesHandler(c *gin.Context) {
 		Result(c, MsgFail(err.Error()))
 	} else {
 		Result(c, CodeFail(SortFail))
+	}
+}
+
+func toggleStarBookHandler(c *gin.Context) {
+	if bookId, err := strconv.ParseUint(c.Param("bookId"), 10, 32); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if toggleStarBook(uint(bookId)) {
+		Result(c, Ok())
+	} else {
+		Result(c, CodeFail(SaveFail))
+	}
+}
+
+func toggleStarPartHandler(c *gin.Context) {
+	if partId, err := strconv.ParseUint(c.Param("partId"), 10, 32); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if toggleStarPart(uint(partId)) {
+		Result(c, Ok())
+	} else {
+		Result(c, CodeFail(SaveFail))
+	}
+}
+
+func toggleStarPageHandler(c *gin.Context) {
+	if pageId, err := strconv.ParseUint(c.Param("pageId"), 10, 32); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if toggleStarPage(uint(pageId)) {
+		Result(c, Ok())
+	} else {
+		Result(c, CodeFail(SaveFail))
 	}
 }

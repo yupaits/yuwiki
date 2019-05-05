@@ -1,7 +1,8 @@
 <template>
   <div>
-    <div class="part-item" :class="{'active': $store.getters.partId === option.ID}" @click="selectPart(option.ID)">
+    <div class="part-item" :class="{'active': $store.getters.partId === option.ID}" @click="selectPart(option)">
       <a-icon :type="option.partType === 0 ? 'folder-open' : 'inbox'"/> {{option.name}}
+      <span class="pull-right" v-if="option.star"><a-icon type="star" theme="filled" :style="{color: '#fadb14'}"/></span>
     </div>
     <draggable v-model="option.SubParts" :move="movePart" @end="dropPart">
       <transition-group>
@@ -23,9 +24,11 @@ export default {
     }
   },
   methods: {
-    selectPart(partId) {
+    selectPart(option) {
+      const partId = option.ID;
       this.$store.dispatch('setPartId', partId);
-      let part = Object.assign({}, this.option);
+      this.$store.dispatch('setPartStar', option.star);
+      let part = Object.assign({}, option);
       delete part.SubParts;
       this.$store.dispatch('setPart', part);
       this.$emit('select', partId);

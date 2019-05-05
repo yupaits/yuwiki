@@ -112,6 +112,7 @@ func Run() {
 		books.DELETE("/:bookId", deleteBookHandler)
 		books.POST("/share", shareBookHandler)
 		books.POST("/sort", sortBooksHandler)
+		books.PUT("/:bookId/star", toggleStarBookHandler)
 	}
 
 	parts := r.Group("/parts").Use(authorize)
@@ -122,6 +123,7 @@ func Run() {
 		parts.PUT("/:partId", savePartHandler)
 		parts.DELETE("/:partId", deletePartHandler)
 		parts.POST("/sort", sortPartsHandler)
+		parts.PUT("/:partId/star", toggleStarPartHandler)
 	}
 
 	pages := r.Group("/pages").Use(authorize)
@@ -133,6 +135,7 @@ func Run() {
 		pages.PUT("/:pageId/edit", editPageHandler)
 		pages.DELETE("/:pageId", deletePageHandler)
 		pages.POST("/sort", sortPagesHandler)
+		pages.PUT("/:pageId/star", toggleStarPageHandler)
 	}
 
 	tags := r.Group("/tags").Use(authorize)

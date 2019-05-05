@@ -22,7 +22,7 @@ const (
 
 type User struct {
 	gorm.Model
-	Username        string    `gorm:"unique;not null"`
+	Username        string    `gorm:"unique;not null" json:"username"`
 	Password        string    `gorm:"size:60;not null"`
 	Avatar          string    `json:"avatar"`
 	Nickname        string    `json:"nickname"`
@@ -53,6 +53,7 @@ type Part struct {
 	PartType  int8   `gorm:"not null" json:"partType"`
 	Protected bool   `json:"protected"`
 	Password  string `gorm:"size:60" json:"password"`
+	Star      bool   `json:"star"`
 	Owner     uint   `gorm:"not null" json:"owner"`
 	SortCode  uint   `gorm:"not null" json:"sortCode"`
 }
@@ -64,6 +65,7 @@ type Page struct {
 	Title     string `gorm:"not null;index" json:"title"`
 	Content   string `gorm:"type:text" json:"content"`
 	Published bool   `json:"published"`
+	Star      bool   `json:"star"`
 	Owner     uint   `gorm:"not null" json:"owner"`
 	SortCode  uint   `gorm:"not null" json:"sortCode"`
 }
@@ -539,4 +541,49 @@ func sortPages(sortedPages *[]SortPage) (bool, error) {
 	}
 	tx.Commit()
 	return true, nil
+}
+
+func toggleStarBook(bookId uint) bool {
+	book := &Book{}
+	if err := Db.Where("id = ? AND owner = ?", bookId, getUserId()).Find(book).Error; err != nil {
+		return false
+	} else if book.ID == 0 {
+		return false
+	} else {
+		book.Star = !book.Star
+		if err := Db.Save(book).Error; err != nil {
+			return false
+		}
+		return true
+	}
+}
+
+func toggleStarPart(partId uint) bool {
+	part := &Part{}
+	if err := Db.Where("id = ? AND owner = ?", partId, getUserId()).Find(part).Error; err != nil {
+		return false
+	} else if part.ID == 0 {
+		return false
+	} else {
+		part.Star = !part.Star
+		if err := Db.Save(part).Error; err != nil {
+			return false
+		}
+		return true
+	}
+}
+
+func toggleStarPage(pageId uint) bool {
+	page := &Page{}
+	if err := Db.Where("id = ? AND owner = ?", pageId, getUserId()).Find(page).Error; err != nil {
+		return false
+	} else if page.ID == 0 {
+		return false
+	} else {
+		page.Star = !page.Star
+		if err := Db.Save(page).Error; err != nil {
+			return false
+		}
+		return true
+	}
 }
