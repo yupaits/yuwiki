@@ -157,7 +157,7 @@ func Init() {
 	Mkdirs(Config.Path.BackupPath)
 	Mkdirs(Config.Path.UploadPath)
 	//初始化数据库
-	InitDb(Config.DataSource.DdlUpdate)
+	InitDb()
 	//配置日志
 	InitLog()
 }

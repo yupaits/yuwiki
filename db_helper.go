@@ -26,7 +26,7 @@ func setOwner(scope *gorm.Scope) {
 	}
 }
 
-func InitDb(update bool) {
+func InitDb() {
 	dbFile := Config.DataSource.Url
 	if Mkdirs(dbFile) {
 		if _, err := os.OpenFile(Config.DataSource.Url, os.O_RDWR|os.O_CREATE, 0666); err != nil {
@@ -47,7 +47,7 @@ func InitDb(update bool) {
 	pageTag := &PageTag{}
 	sharedBook := &SharedBook{}
 	uploadFile := &UploadFile{}
-	if update {
+	if Config.DataSource.DdlUpdate {
 		if Db.HasTable(user) {
 			Db.AutoMigrate(user)
 		} else {
