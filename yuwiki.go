@@ -5,16 +5,14 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
-	"io"
 	"net/http"
-	"os"
 )
 
 var Config *AppConfig
 
 func Run() {
 	Init()
+	defer Db.Close()
 
 	if Config.Debug {
 		gin.SetMode(gin.DebugMode)
@@ -22,17 +20,8 @@ func Run() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	existsDir := Mkdirs(Config.LogFile)
-	logFile, err := os.OpenFile(Config.LogFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.ModeAppend)
-	hasLogFile := existsDir && err == nil
-	if hasLogFile {
-		gin.DefaultWriter = io.MultiWriter(logFile, os.Stdout)
-		log.SetOutput(io.MultiWriter(logFile, os.Stdout))
-	} else {
-		gin.DefaultWriter = io.MultiWriter(os.Stdout)
-	}
-
-	r := gin.Default()
+	r := gin.New()
+	r.Use(logger(), gin.Recovery())
 
 	store := cookie.NewStore([]byte(Config.Secret))
 	store.Options(sessions.Options{
@@ -42,7 +31,7 @@ func Run() {
 	r.Use(sessions.Sessions(Config.SessionCookie, store))
 
 	gob.Register(User{})
-	authorize := NewAuthMid()
+	authorize := newAuthMid()
 
 	r.Static("/static", Config.Http.StaticPath)
 	r.StaticFile("/favicon.ico", Config.Http.Favicon)
@@ -157,7 +146,7 @@ func Run() {
 
 	StartScheduler()
 
-	log.Info("yuwiki启动成功，端口:", Config.Http.Port)
+	log.WithField("port", Config.Http.Port).Info("yuwiki启动成功")
 	log.Fatal(r.Run(":" + Config.Http.Port))
 }
 
@@ -170,9 +159,5 @@ func Init() {
 	//初始化数据库
 	InitDb(Config.DataSource.DdlUpdate)
 	//配置日志
-	if Config.Debug {
-		log.SetFormatter(&log.TextFormatter{})
-	} else {
-		log.SetFormatter(&log.JSONFormatter{})
-	}
+	InitLog()
 }

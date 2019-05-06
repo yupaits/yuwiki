@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/matoous/go-nanoid"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"io"
 	"os"
@@ -32,6 +31,7 @@ const (
 const (
 	DateLayout         = "2006-01-02"
 	DateTimeLayout     = "2006-01-02 15:04:05"
+	DateTimeLogLayout  = "2006-01-02 15:04:05.000"
 	DateTimeFileLayout = "20060102150405"
 )
 
@@ -53,7 +53,7 @@ func EncPassword(raw string, salt string) (string, error) {
 		return "", errors.New("密码长度必须不小于6位")
 	}
 	if encHash, err := bcrypt.GenerateFromPassword([]byte(raw+salt), bcrypt.DefaultCost); err != nil {
-		log.Error("生成密码密文失败 ", err)
+		log.WithField("error", err).Error("生成密码密文失败")
 		return "", err
 	} else {
 		return string(encHash), nil

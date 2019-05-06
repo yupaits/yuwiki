@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"path"
 )
 
@@ -19,7 +19,7 @@ type UploadFile struct {
 func uploadFileHandler(c *gin.Context) {
 	fileHeader, err := c.FormFile("file")
 	if err != nil {
-		log.Errorf("文件上传失败，错误原因：%v", err)
+		log.WithField("error", err).Error("文件上传失败")
 		Result(c, CodeFail(FileUploadFail))
 		return
 	}
@@ -31,7 +31,7 @@ func uploadFileHandler(c *gin.Context) {
 	filename := NowFilename(DateTimeFileLayout) + GenFilename() + path.Ext(fileHeader.Filename)
 	filepath := Config.Path.UploadPath + filename
 	if err := c.SaveUploadedFile(fileHeader, filepath); err != nil {
-		log.Errorf("保存文件失败，错误原因：%v", err)
+		log.WithField("error", err).Error("保存文件失败")
 		Result(c, CodeFail(FileUploadFail))
 		return
 	}
@@ -42,12 +42,15 @@ func uploadFileHandler(c *gin.Context) {
 		Size:         fileHeader.Size,
 	}
 	if err := Db.Create(uploadFile).Error; err != nil {
-		log.Errorf("保存文件上传记录失败，错误原因：%v", err)
+		log.WithField("error", err).Error("保存文件上传记录失败")
 		Result(c, CodeFail(FileUploadFail))
 	} else {
 		fileUrl := "/file/" + filename
 		Result(c, OkData(fileUrl))
-		log.Infof("上传文件成功，文件名：%s，保存路径：%s", filename, filepath)
+		log.WithFields(logrus.Fields{
+			"filename": filename,
+			"filepath": filepath,
+		}).Info("上传文件成功")
 	}
 }
 

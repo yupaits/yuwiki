@@ -1,5 +1,6 @@
 debug = false
 log_file = "/yuwiki/logs/yuwiki.log"
+log_file_max_count = 100
 session_cookie = "wiki.session"
 secret = "yupaits"
 session_auth = "user"

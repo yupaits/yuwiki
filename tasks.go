@@ -2,7 +2,7 @@ package yuwiki
 
 import (
 	"github.com/robfig/cron"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path"
 	"strings"
@@ -29,13 +29,22 @@ func backup() {
 	if dbFileSha1 == yesterdayFileSha1 {
 		//无增量数据时直接重命名备份文件
 		if err := os.Rename(yesterdayBackupFile, todayBackupFile); err != nil {
-			log.Errorf("重命名备份文件失败，文件名：%s， 错误信息：%v", yesterdayBackupFile, err)
+			log.WithFields(logrus.Fields{
+				"filename": yesterdayBackupFile,
+				"error":    err,
+			}).Error("重命名备份文件失败")
 		} else {
-			log.Infof("重命名备份文件成功，文件名：%s, 新文件名：%s", yesterdayBackupFile, todayBackupFile)
+			log.WithFields(logrus.Fields{
+				"filename": yesterdayBackupFile,
+				"newFile":  todayBackupFile,
+			}).Info("重命名备份文件成功")
 		}
 	} else if size, err := CopyFile(todayBackupFile, dbFile); err != nil {
-		log.Errorf("数据库备份失败，错误信息：%v", err)
+		log.WithField("error", err).Error("数据库备份失败")
 	} else {
-		log.Infof("数据库备份成功，文件名：%s，大小：%s", todayBackupFile, ByteSize(uint64(size)))
+		log.WithFields(logrus.Fields{
+			"filename": todayBackupFile,
+			"size":     ByteSize(uint64(size)),
+		}).Info("数据库备份成功")
 	}
 }

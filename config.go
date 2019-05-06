@@ -2,16 +2,17 @@ package yuwiki
 
 import (
 	"github.com/BurntSushi/toml"
-	log "github.com/sirupsen/logrus"
+	syslog "log"
 )
 
 type AppConfig struct {
-	Debug         bool   `toml:"debug"`
-	LogFile       string `toml:"log_file"`
-	SessionCookie string `toml:"session_cookie"`
-	Secret        string `toml:"secret"`
-	SessionAuth   string `toml:"session_auth"`
-	Http          struct {
+	Debug           bool   `toml:"debug"`
+	LogFile         string `toml:"log_file"`
+	LogFileMaxCount uint   `toml:"log_file_max_count"`
+	SessionCookie   string `toml:"session_cookie"`
+	Secret          string `toml:"secret"`
+	SessionAuth     string `toml:"session_auth"`
+	Http            struct {
 		Port            string `toml:"port"`
 		Favicon         string `toml:"favicon"`
 		StaticPath      string `toml:"static_path"`
@@ -34,7 +35,7 @@ type AppConfig struct {
 func initConfig() *AppConfig {
 	var config *AppConfig
 	if _, err := toml.DecodeFile("./config.toml", &config); err != nil {
-		log.Error(err)
+		syslog.Fatalln(err)
 	}
 	return config
 }

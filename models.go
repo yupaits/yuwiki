@@ -2,9 +2,8 @@ package yuwiki
 
 import (
 	"errors"
-	"fmt"
 	"github.com/jinzhu/gorm"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
@@ -113,7 +112,7 @@ func currentUser() (*User, error) {
 	userId := getUserId()
 	user := &User{}
 	if err := Db.Where("id = ?", userId).Find(user).Error; err != nil {
-		log.Error("获取当前用户信息失败 ", err)
+		log.WithField("error", err).Error("获取当前用户信息失败")
 		return user, err
 	}
 	return user, nil
@@ -183,7 +182,7 @@ func modifyPassword(modify *PasswordModify) (bool, string) {
 func getBooks() *[]Book {
 	books := &[]Book{}
 	if err := Db.Where("owner = ?", getUserId()).Order("sort_code").Find(books).Error; err != nil {
-		log.Error("获取笔记本清单失败 ", err)
+		log.WithField("error", err).Error("获取笔记本清单失败")
 	}
 	return books
 }
@@ -219,7 +218,10 @@ func deleteBook(id uint) bool {
 func getBookParts(bookId uint) *[]TreePart {
 	parts := &[]Part{}
 	if err := Db.Where("book_id = ? AND parent_Id = 0 AND owner = ?", bookId, getUserId()).Order("sort_code").Find(parts).Error; err != nil {
-		log.Error(fmt.Sprintf("获取笔记本分区清单失败，bookId: %d ", bookId), err)
+		log.WithFields(logrus.Fields{
+			"bookId": bookId,
+			"error":  err,
+		}).Error("获取笔记本分区清单失败")
 	}
 	var treeParts []TreePart
 	for _, part := range *parts {
@@ -238,7 +240,10 @@ func getBookParts(bookId uint) *[]TreePart {
 func getSubParts(parentId uint) *[]TreePart {
 	parts := &[]Part{}
 	if err := Db.Where("parent_id = ?", parentId).Order("sort_code").Find(parts).Error; err != nil {
-		log.Error(fmt.Sprintf("获取笔记本分区子分区列表失败，parentId: %d ", parentId), err)
+		log.WithFields(logrus.Fields{
+			"parentId": parentId,
+			"error":    err,
+		}).Error("获取笔记本分区子分区列表失败")
 	}
 	var subParts []TreePart
 	for _, part := range *parts {
@@ -257,7 +262,10 @@ func getSubParts(parentId uint) *[]TreePart {
 func getPart(partId uint) *Part {
 	part := &Part{}
 	if err := Db.Where("id = ? AND owner = ?", partId, getUserId()).Find(part).Error; err != nil {
-		log.Error(fmt.Sprintf("获取分区信息失败，partId: %d ", partId), err)
+		log.WithFields(logrus.Fields{
+			"partId": partId,
+			"error":  err,
+		}).Error("获取分区信息失败")
 	}
 	return part
 }
@@ -319,7 +327,10 @@ func deletePart(id uint) bool {
 func getPartPages(partId uint) *[]PageVo {
 	pages := &[]Page{}
 	if err := Db.Where("part_id = ? AND owner = ?", partId, getUserId()).Order("sort_code").Find(pages).Error; err != nil {
-		log.Error(fmt.Sprintf("获取分区页面清单失败，partId: %d ", partId), err)
+		log.WithFields(logrus.Fields{
+			"partId": partId,
+			"error":  err,
+		}).Error("获取分区页面清单失败")
 	}
 	var pageVos []PageVo
 	for _, page := range *pages {
@@ -334,7 +345,10 @@ func getPartPages(partId uint) *[]PageVo {
 func getPage(id uint, editable bool) *PageVo {
 	page := &Page{}
 	if err := Db.Where("id = ? AND owner = ?", id, getUserId()).Find(page).Error; err != nil {
-		log.Error(fmt.Sprintf("获取页面失败，pageId: %d ", id), err)
+		log.WithFields(logrus.Fields{
+			"pageId": id,
+			"error":  err,
+		}).Error("获取页面失败")
 	}
 	pageVo := PageVo{Page: *page}
 	setPageTags(&pageVo)
@@ -351,7 +365,10 @@ func getPage(id uint, editable bool) *PageVo {
 func setPageTags(pageVo *PageVo) {
 	var pageTags []PageTag
 	if err := Db.Where("page_id = ?", pageVo.ID).Find(&pageTags).Error; err != nil {
-		log.Error(fmt.Sprintf("获取页面标签列表失败，pageId: %d ", pageVo.ID), err)
+		log.WithFields(logrus.Fields{
+			"pageId": pageVo.ID,
+			"error":  err,
+		}).Error("获取页面标签列表失败")
 	} else if len(pageTags) > 0 {
 		var tagIds []uint
 		for _, pageTag := range pageTags {
@@ -359,7 +376,10 @@ func setPageTags(pageVo *PageVo) {
 		}
 		tags := &[]Tag{}
 		if err := Db.Where("id in (?)", tagIds).Find(tags).Error; err != nil {
-			log.Error(fmt.Sprintf("获取标签信息失败，tagIds: %v ", tagIds), err)
+			log.WithFields(logrus.Fields{
+				"tagIds": tagIds,
+				"error":  err,
+			}).Error("获取标签信息失败")
 		}
 		pageVo.Tags = []string{}
 		for _, tag := range *tags {
@@ -412,20 +432,31 @@ func savePage(pageDto *PageDto) bool {
 				pageTag.TagId = tag.ID
 				//添加新的页面标签关联记录
 				if err := Db.Create(pageTag).Error; err != nil {
-					log.Error(fmt.Sprintf("创建页面标签关联记录失败，pageId: %d，tagId: %d", page.ID, tag.ID), err)
+					log.WithFields(logrus.Fields{
+						"pageId": page.ID,
+						"tagId":  tag.ID,
+						"error":  err,
+					}).Error("创建页面标签关联记录失败")
 				}
 			}
 		}
 		//删除无效的页面标签关联记录
 		if err := Db.Where("page_id = ?", page.ID).Not("tag_id", tagIds).
 			Delete(PageTag{}).Error; err != nil {
-			log.Error(fmt.Sprintf("删除页面标签管理记录失败，pageId: %d，排除的tagIds: %v", page.ID, tagIds), err)
+			log.WithFields(logrus.Fields{
+				"pageId":      page.ID,
+				"notInTagIds": tagIds,
+				"error":       err,
+			}).Error("删除页面标签管理记录失败")
 		}
 	} else {
 		tagErr = Db.Where("page_id = ?", page.ID).Delete(PageTag{}).Error
 	}
 	if tagErr != nil {
-		log.Error(fmt.Sprintf("更新页面标签信息失败，pageId: %d ", page.ID), err)
+		log.WithFields(logrus.Fields{
+			"pageId": page.ID,
+			"error":  err,
+		}).Error("更新页面标签信息失败")
 	}
 	return err == nil
 }
@@ -441,7 +472,10 @@ func editPage(pageDto *PageDto) bool {
 				Owner:     getUserId(),
 			}
 			if err := Db.Create(historicalPage).Error; err != nil {
-				log.Error(fmt.Sprintf("保存页面历史记录失败，pageId: %d ", pageDto.ID), err)
+				log.WithFields(logrus.Fields{
+					"pageId": pageDto.ID,
+					"error":  err,
+				}).Error("保存页面历史记录失败")
 			}
 		}
 		return true
@@ -458,7 +492,7 @@ func deletePage(id uint) bool {
 func getTags() *[]Tag {
 	tags := &[]Tag{}
 	if err := Db.Find(tags).Error; err != nil {
-		log.Error("获取页面标签列表失败 ", err)
+		log.WithField("error", err).Error("获取页面标签列表失败")
 	}
 	return tags
 }
@@ -466,7 +500,10 @@ func getTags() *[]Tag {
 func getHistoricalPages(pageId uint) *[]HistoricalPage {
 	historicalPages := &[]HistoricalPage{}
 	if err := Db.Where("page_id = ? AND owner = ?", pageId, getUserId()).Order("created_at DESC").Find(historicalPages).Error; err != nil {
-		log.Error(fmt.Sprintf("获取页面历史记录失败，pageId: %d ", pageId), err)
+		log.WithFields(logrus.Fields{
+			"pageId": pageId,
+			"error":  err,
+		}).Error("获取页面历史记录失败")
 	}
 	return historicalPages
 }
@@ -497,7 +534,10 @@ func searchPagesByKeyword(keyword string) *[]PageVo {
 	keyword = "%" + keyword + "%"
 	pages := &[]Page{}
 	if err := Db.Where("(title LIKE ? OR content LIKE ?) AND owner = ?", keyword, keyword, getUserId()).Order("updated_at DESC").Find(pages).Error; err != nil {
-		log.Error(fmt.Sprintf("根据关键字查找页面失败，keyword: %s ", keyword), err)
+		log.WithFields(logrus.Fields{
+			"keyword": keyword,
+			"error":   err,
+		}).Error("根据关键字查找页面失败")
 	}
 	var pageVos []PageVo
 	for _, page := range *pages {
