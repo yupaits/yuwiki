@@ -12,7 +12,7 @@ import (
 
 func TestRandomPassword(t *testing.T) {
 	random, _ := gonanoid.Nanoid(passwordLen)
-	log.Print(random)
+	log.Println(random)
 	assert.Len(t, random, passwordLen)
 }
 

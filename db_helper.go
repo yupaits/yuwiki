@@ -22,7 +22,7 @@ func setOwner(scope *gorm.Scope) {
 	if scope.HasColumn("owner") {
 		err := scope.SetColumn("owner", getUserId())
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 	}
 }
@@ -31,7 +31,7 @@ func InitDb(update bool) {
 	dbFile := Config.DataSource.Url
 	if Mkdirs(dbFile) {
 		if _, err := os.OpenFile(Config.DataSource.Url, os.O_RDWR|os.O_CREATE, 0666); err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 	}
 	Db = DbConn()
@@ -47,6 +47,7 @@ func InitDb(update bool) {
 	tag := &Tag{}
 	pageTag := &PageTag{}
 	sharedBook := &SharedBook{}
+	uploadFile := &UploadFile{}
 	if update {
 		if Db.HasTable(user) {
 			Db.AutoMigrate(user)
@@ -88,8 +89,13 @@ func InitDb(update bool) {
 		} else {
 			Db.CreateTable(sharedBook)
 		}
+		if Db.HasTable(uploadFile) {
+			Db.AutoMigrate(uploadFile)
+		} else {
+			Db.CreateTable(uploadFile)
+		}
 	} else {
-		Db.DropTableIfExists(user, book, part, page, historicalPage, tag, pageTag, sharedBook)
-		Db.CreateTable(user, book, part, page, historicalPage, tag, pageTag, sharedBook)
+		Db.DropTableIfExists(user, book, part, page, historicalPage, tag, pageTag, sharedBook, uploadFile)
+		Db.CreateTable(user, book, part, page, historicalPage, tag, pageTag, sharedBook, uploadFile)
 	}
 }

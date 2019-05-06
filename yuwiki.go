@@ -14,7 +14,7 @@ import (
 var Config *AppConfig
 
 func Run() {
-	Config = InitConfig()
+	Config = initConfig()
 
 	if Config.Debug {
 		gin.SetMode(gin.DebugMode)
@@ -159,5 +159,5 @@ func Run() {
 	StartScheduler()
 
 	log.Println("yuwiki启动成功，端口:", Config.Http.Port)
-	log.Fatal(r.Run(":" + Config.Http.Port))
+	log.Fatalln(r.Run(":" + Config.Http.Port))
 }

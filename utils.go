@@ -18,6 +18,7 @@ import (
 const (
 	passwordLen = 12
 	saltLen     = 6
+	filenameLen = 8
 )
 
 const (
@@ -29,8 +30,9 @@ const (
 )
 
 const (
-	DateLayout     = "2006-01-02"
-	DateTimeLayout = "2006-01-02 15:04:05"
+	DateLayout         = "2006-01-02"
+	DateTimeLayout     = "2006-01-02 15:04:05"
+	DateTimeFileLayout = "20060102150405"
 )
 
 //生成随机 Salt
@@ -51,7 +53,7 @@ func EncPassword(raw string, salt string) (string, error) {
 		return "", errors.New("密码长度必须不小于6位")
 	}
 	if encHash, err := bcrypt.GenerateFromPassword([]byte(raw+salt), bcrypt.DefaultCost); err != nil {
-		log.Fatal("生成密码密文失败", err)
+		log.Println("生成密码密文失败 ", err)
 		return "", err
 	} else {
 		return string(encHash), nil
@@ -62,6 +64,12 @@ func EncPassword(raw string, salt string) (string, error) {
 func Match(raw string, salt string, enc string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(enc), []byte(raw+salt))
 	return err == nil
+}
+
+//生成文件名
+func GenFilename() string {
+	filename, _ := gonanoid.Nanoid(filenameLen)
+	return filename
 }
 
 //创建全路径目录，自动忽略文件
@@ -90,6 +98,14 @@ func Yesterday(layout string) string {
 	return time.Now().AddDate(0, 0, -1).Format(layout)
 }
 
+//获取当前时间用于生成文件名
+func NowFilename(layout string) string {
+	if layout == "" {
+		layout = DateTimeFileLayout
+	}
+	return time.Now().Format(layout)
+}
+
 //计算文件SHA1值
 func FileSha1(fileName string) (string, error) {
 	file, err := os.Open(fileName)
@@ -98,7 +114,7 @@ func FileSha1(fileName string) (string, error) {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Fatalln(err)
+			log.Println(err)
 		}
 	}()
 	hash := sha1.New()
@@ -117,7 +133,7 @@ func CopyFile(dstFile, srcFile string) (written int64, err error) {
 	}
 	defer func() {
 		if err := src.Close(); err != nil {
-			log.Fatalln(err)
+			log.Println(err)
 		}
 	}()
 	dst, err := os.OpenFile(dstFile, os.O_WRONLY|os.O_CREATE, 0644)
@@ -126,7 +142,7 @@ func CopyFile(dstFile, srcFile string) (written int64, err error) {
 	}
 	defer func() {
 		if err := dst.Close(); err != nil {
-			log.Fatalln(err)
+			log.Println(err)
 		}
 	}()
 	return io.Copy(dst, src)

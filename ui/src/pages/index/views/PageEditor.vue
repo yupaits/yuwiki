@@ -37,7 +37,7 @@
             </span>
           </a-col>
         </a-row>
-        <mavon-editor :value="viewedPage.content" :toolbars="toolbars" ref="editor" class="editor"></mavon-editor>
+        <mavon-editor :value="viewedPage.content" :toolbars="toolbars" ref="editor" class="editor" @imgAdd="addImg"></mavon-editor>
       </a-col>
     </a-row>
   </div>
@@ -107,6 +107,11 @@ export default {
       } else {
         this.$router.push('/');
       }
+    },
+    addImg(pos, file) {
+      this.$api.uploadFile(file).then(res => {
+        this.$refs.editor.$img2Url(pos, res.data);
+      });
     },
     showHistory(page) {
       if (this.historyId === page.ID) {

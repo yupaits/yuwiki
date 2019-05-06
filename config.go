@@ -31,10 +31,12 @@ type AppConfig struct {
 	} `toml:"path"`
 }
 
-func InitConfig() *AppConfig {
+func initConfig() *AppConfig {
 	var config *AppConfig
 	if _, err := toml.DecodeFile("./config.toml", &config); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
+	Mkdirs(config.Path.BackupPath)
+	Mkdirs(config.Path.UploadPath)
 	return config
 }
