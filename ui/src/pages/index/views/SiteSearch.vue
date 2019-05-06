@@ -7,7 +7,7 @@
           <span class="ml-1">知识库</span>
         </span>
         <span class="pull-right">
-          <a-button type="dashed" size="small" icon="rollback" @click="home">返回</a-button>
+          <a-button icon="rollback" @click="home">返回</a-button>
         </span>
       </a-layout-header>
       <a-layout-content>
