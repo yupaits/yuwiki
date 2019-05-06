@@ -3,7 +3,7 @@ package yuwiki
 import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 )
 
@@ -22,7 +22,7 @@ func setOwner(scope *gorm.Scope) {
 	if scope.HasColumn("owner") {
 		err := scope.SetColumn("owner", getUserId())
 		if err != nil {
-			log.Println(err)
+			log.Error(err)
 		}
 	}
 }
@@ -31,7 +31,7 @@ func InitDb(update bool) {
 	dbFile := Config.DataSource.Url
 	if Mkdirs(dbFile) {
 		if _, err := os.OpenFile(Config.DataSource.Url, os.O_RDWR|os.O_CREATE, 0666); err != nil {
-			log.Println(err)
+			log.Error(err)
 		}
 	}
 	Db = DbConn()

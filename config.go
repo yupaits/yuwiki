@@ -2,7 +2,7 @@ package yuwiki
 
 import (
 	"github.com/BurntSushi/toml"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 type AppConfig struct {
@@ -34,9 +34,7 @@ type AppConfig struct {
 func initConfig() *AppConfig {
 	var config *AppConfig
 	if _, err := toml.DecodeFile("./config.toml", &config); err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
-	Mkdirs(config.Path.BackupPath)
-	Mkdirs(config.Path.UploadPath)
 	return config
 }

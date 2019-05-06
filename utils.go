@@ -5,9 +5,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/matoous/go-nanoid"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"io"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -53,7 +53,7 @@ func EncPassword(raw string, salt string) (string, error) {
 		return "", errors.New("密码长度必须不小于6位")
 	}
 	if encHash, err := bcrypt.GenerateFromPassword([]byte(raw+salt), bcrypt.DefaultCost); err != nil {
-		log.Println("生成密码密文失败 ", err)
+		log.Error("生成密码密文失败 ", err)
 		return "", err
 	} else {
 		return string(encHash), nil
@@ -114,7 +114,7 @@ func FileSha1(fileName string) (string, error) {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Println(err)
+			log.Error(err)
 		}
 	}()
 	hash := sha1.New()
@@ -133,7 +133,7 @@ func CopyFile(dstFile, srcFile string) (written int64, err error) {
 	}
 	defer func() {
 		if err := src.Close(); err != nil {
-			log.Println(err)
+			log.Error(err)
 		}
 	}()
 	dst, err := os.OpenFile(dstFile, os.O_WRONLY|os.O_CREATE, 0644)
@@ -142,7 +142,7 @@ func CopyFile(dstFile, srcFile string) (written int64, err error) {
 	}
 	defer func() {
 		if err := dst.Close(); err != nil {
-			log.Println(err)
+			log.Error(err)
 		}
 	}()
 	return io.Copy(dst, src)

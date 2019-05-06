@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
@@ -113,7 +113,7 @@ func currentUser() (*User, error) {
 	userId := getUserId()
 	user := &User{}
 	if err := Db.Where("id = ?", userId).Find(user).Error; err != nil {
-		log.Println("获取当前用户信息失败 ", err)
+		log.Error("获取当前用户信息失败 ", err)
 		return user, err
 	}
 	return user, nil
@@ -183,7 +183,7 @@ func modifyPassword(modify *PasswordModify) (bool, string) {
 func getBooks() *[]Book {
 	books := &[]Book{}
 	if err := Db.Where("owner = ?", getUserId()).Order("sort_code").Find(books).Error; err != nil {
-		log.Println("获取笔记本清单失败 ", err)
+		log.Error("获取笔记本清单失败 ", err)
 	}
 	return books
 }
@@ -219,7 +219,7 @@ func deleteBook(id uint) bool {
 func getBookParts(bookId uint) *[]TreePart {
 	parts := &[]Part{}
 	if err := Db.Where("book_id = ? AND parent_Id = 0 AND owner = ?", bookId, getUserId()).Order("sort_code").Find(parts).Error; err != nil {
-		log.Println(fmt.Sprintf("获取笔记本分区清单失败，bookId: %d ", bookId), err)
+		log.Error(fmt.Sprintf("获取笔记本分区清单失败，bookId: %d ", bookId), err)
 	}
 	var treeParts []TreePart
 	for _, part := range *parts {
@@ -238,7 +238,7 @@ func getBookParts(bookId uint) *[]TreePart {
 func getSubParts(parentId uint) *[]TreePart {
 	parts := &[]Part{}
 	if err := Db.Where("parent_id = ?", parentId).Order("sort_code").Find(parts).Error; err != nil {
-		log.Println(fmt.Sprintf("获取笔记本分区子分区列表失败，parentId: %d ", parentId), err)
+		log.Error(fmt.Sprintf("获取笔记本分区子分区列表失败，parentId: %d ", parentId), err)
 	}
 	var subParts []TreePart
 	for _, part := range *parts {
@@ -257,7 +257,7 @@ func getSubParts(parentId uint) *[]TreePart {
 func getPart(partId uint) *Part {
 	part := &Part{}
 	if err := Db.Where("id = ? AND owner = ?", partId, getUserId()).Find(part).Error; err != nil {
-		log.Println(fmt.Sprintf("获取分区信息失败，partId: %d ", partId), err)
+		log.Error(fmt.Sprintf("获取分区信息失败，partId: %d ", partId), err)
 	}
 	return part
 }
@@ -319,7 +319,7 @@ func deletePart(id uint) bool {
 func getPartPages(partId uint) *[]PageVo {
 	pages := &[]Page{}
 	if err := Db.Where("part_id = ? AND owner = ?", partId, getUserId()).Order("sort_code").Find(pages).Error; err != nil {
-		log.Println(fmt.Sprintf("获取分区页面清单失败，partId: %d ", partId), err)
+		log.Error(fmt.Sprintf("获取分区页面清单失败，partId: %d ", partId), err)
 	}
 	var pageVos []PageVo
 	for _, page := range *pages {
@@ -334,7 +334,7 @@ func getPartPages(partId uint) *[]PageVo {
 func getPage(id uint, editable bool) *PageVo {
 	page := &Page{}
 	if err := Db.Where("id = ? AND owner = ?", id, getUserId()).Find(page).Error; err != nil {
-		log.Println(fmt.Sprintf("获取页面失败，pageId: %d ", id), err)
+		log.Error(fmt.Sprintf("获取页面失败，pageId: %d ", id), err)
 	}
 	pageVo := PageVo{Page: *page}
 	setPageTags(&pageVo)
@@ -351,7 +351,7 @@ func getPage(id uint, editable bool) *PageVo {
 func setPageTags(pageVo *PageVo) {
 	var pageTags []PageTag
 	if err := Db.Where("page_id = ?", pageVo.ID).Find(&pageTags).Error; err != nil {
-		log.Println(fmt.Sprintf("获取页面标签列表失败，pageId: %d ", pageVo.ID), err)
+		log.Error(fmt.Sprintf("获取页面标签列表失败，pageId: %d ", pageVo.ID), err)
 	} else if len(pageTags) > 0 {
 		var tagIds []uint
 		for _, pageTag := range pageTags {
@@ -359,7 +359,7 @@ func setPageTags(pageVo *PageVo) {
 		}
 		tags := &[]Tag{}
 		if err := Db.Where("id in (?)", tagIds).Find(tags).Error; err != nil {
-			log.Println(fmt.Sprintf("获取标签信息失败，tagIds: %v ", tagIds), err)
+			log.Error(fmt.Sprintf("获取标签信息失败，tagIds: %v ", tagIds), err)
 		}
 		pageVo.Tags = []string{}
 		for _, tag := range *tags {
@@ -412,20 +412,20 @@ func savePage(pageDto *PageDto) bool {
 				pageTag.TagId = tag.ID
 				//添加新的页面标签关联记录
 				if err := Db.Create(pageTag).Error; err != nil {
-					log.Println(fmt.Sprintf("创建页面标签关联记录失败，pageId: %d，tagId: %d", page.ID, tag.ID), err)
+					log.Error(fmt.Sprintf("创建页面标签关联记录失败，pageId: %d，tagId: %d", page.ID, tag.ID), err)
 				}
 			}
 		}
 		//删除无效的页面标签关联记录
 		if err := Db.Where("page_id = ?", page.ID).Not("tag_id", tagIds).
 			Delete(PageTag{}).Error; err != nil {
-			log.Println(fmt.Sprintf("删除页面标签管理记录失败，pageId: %d，排除的tagIds: %v", page.ID, tagIds), err)
+			log.Error(fmt.Sprintf("删除页面标签管理记录失败，pageId: %d，排除的tagIds: %v", page.ID, tagIds), err)
 		}
 	} else {
 		tagErr = Db.Where("page_id = ?", page.ID).Delete(PageTag{}).Error
 	}
 	if tagErr != nil {
-		log.Println(fmt.Sprintf("更新页面标签信息失败，pageId: %d ", page.ID), err)
+		log.Error(fmt.Sprintf("更新页面标签信息失败，pageId: %d ", page.ID), err)
 	}
 	return err == nil
 }
@@ -441,7 +441,7 @@ func editPage(pageDto *PageDto) bool {
 				Owner:     getUserId(),
 			}
 			if err := Db.Create(historicalPage).Error; err != nil {
-				log.Println(fmt.Sprintf("保存页面历史记录失败，pageId: %d ", pageDto.ID), err)
+				log.Error(fmt.Sprintf("保存页面历史记录失败，pageId: %d ", pageDto.ID), err)
 			}
 		}
 		return true
@@ -458,7 +458,7 @@ func deletePage(id uint) bool {
 func getTags() *[]Tag {
 	tags := &[]Tag{}
 	if err := Db.Find(tags).Error; err != nil {
-		log.Println("获取页面标签列表失败 ", err)
+		log.Error("获取页面标签列表失败 ", err)
 	}
 	return tags
 }
@@ -466,7 +466,7 @@ func getTags() *[]Tag {
 func getHistoricalPages(pageId uint) *[]HistoricalPage {
 	historicalPages := &[]HistoricalPage{}
 	if err := Db.Where("page_id = ? AND owner = ?", pageId, getUserId()).Order("created_at DESC").Find(historicalPages).Error; err != nil {
-		log.Println(fmt.Sprintf("获取页面历史记录失败，pageId: %d ", pageId), err)
+		log.Error(fmt.Sprintf("获取页面历史记录失败，pageId: %d ", pageId), err)
 	}
 	return historicalPages
 }
@@ -497,7 +497,7 @@ func searchPagesByKeyword(keyword string) *[]PageVo {
 	keyword = "%" + keyword + "%"
 	pages := &[]Page{}
 	if err := Db.Where("(title LIKE ? OR content LIKE ?) AND owner = ?", keyword, keyword, getUserId()).Order("updated_at DESC").Find(pages).Error; err != nil {
-		log.Println(fmt.Sprintf("根据关键字查找页面失败，keyword: %s ", keyword), err)
+		log.Error(fmt.Sprintf("根据关键字查找页面失败，keyword: %s ", keyword), err)
 	}
 	var pageVos []PageVo
 	for _, page := range *pages {

@@ -5,8 +5,8 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"io"
-	"log"
 	"net/http"
 	"os"
 )
@@ -14,7 +14,7 @@ import (
 var Config *AppConfig
 
 func Run() {
-	Config = initConfig()
+	Init()
 
 	if Config.Debug {
 		gin.SetMode(gin.DebugMode)
@@ -27,11 +27,10 @@ func Run() {
 	hasLogFile := existsDir && err == nil
 	if hasLogFile {
 		gin.DefaultWriter = io.MultiWriter(logFile, os.Stdout)
+		log.SetOutput(io.MultiWriter(logFile, os.Stdout))
 	} else {
 		gin.DefaultWriter = io.MultiWriter(os.Stdout)
 	}
-
-	InitDb(Config.DataSource.DdlUpdate)
 
 	r := gin.Default()
 
@@ -158,6 +157,22 @@ func Run() {
 
 	StartScheduler()
 
-	log.Println("yuwiki启动成功，端口:", Config.Http.Port)
-	log.Fatalln(r.Run(":" + Config.Http.Port))
+	log.Info("yuwiki启动成功，端口:", Config.Http.Port)
+	log.Fatal(r.Run(":" + Config.Http.Port))
+}
+
+func Init() {
+	//初始化配置信息
+	Config = initConfig()
+	//创建目录
+	Mkdirs(Config.Path.BackupPath)
+	Mkdirs(Config.Path.UploadPath)
+	//初始化数据库
+	InitDb(Config.DataSource.DdlUpdate)
+	//配置日志
+	if Config.Debug {
+		log.SetFormatter(&log.TextFormatter{})
+	} else {
+		log.SetFormatter(&log.JSONFormatter{})
+	}
 }

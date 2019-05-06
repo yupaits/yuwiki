@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"path"
 )
 
@@ -19,19 +19,19 @@ type UploadFile struct {
 func uploadFileHandler(c *gin.Context) {
 	fileHeader, err := c.FormFile("file")
 	if err != nil {
-		log.Printf("文件上传失败，错误原因：%v", err)
+		log.Errorf("文件上传失败，错误原因：%v", err)
 		Result(c, CodeFail(FileUploadFail))
 		return
 	}
 	if fileHeader == nil {
-		log.Println("上传文件为空")
+		log.Error("上传文件为空")
 		Result(c, CodeFail(FileUploadFail))
 		return
 	}
 	filename := NowFilename(DateTimeFileLayout) + GenFilename() + path.Ext(fileHeader.Filename)
 	filepath := Config.Path.UploadPath + filename
 	if err := c.SaveUploadedFile(fileHeader, filepath); err != nil {
-		log.Printf("保存文件失败，错误原因：%v", err)
+		log.Errorf("保存文件失败，错误原因：%v", err)
 		Result(c, CodeFail(FileUploadFail))
 		return
 	}
@@ -42,11 +42,12 @@ func uploadFileHandler(c *gin.Context) {
 		Size:         fileHeader.Size,
 	}
 	if err := Db.Create(uploadFile).Error; err != nil {
-		log.Printf("保存文件上传记录失败，错误原因：%v", err)
+		log.Errorf("保存文件上传记录失败，错误原因：%v", err)
 		Result(c, CodeFail(FileUploadFail))
 	} else {
 		fileUrl := "/file/" + filename
 		Result(c, OkData(fileUrl))
+		log.Infof("上传文件成功，文件名：%s，保存路径：%s", filename, filepath)
 	}
 }
 
