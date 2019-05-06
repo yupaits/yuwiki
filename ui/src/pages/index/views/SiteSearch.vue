@@ -7,7 +7,7 @@
           <span class="ml-1">知识库</span>
         </span>
         <span class="pull-right">
-          <a-button icon="rollback" @click="home">返回</a-button>
+          <a-button icon="rollback" @click="$router.go(-1)">返回</a-button>
         </span>
       </a-layout-header>
       <a-layout-content>
@@ -82,6 +82,8 @@ export default {
   methods: {
     searchPages() {
       this.loading = true;
+      this.viewedPage = {};
+      this.pageId = undefined;
       this.$api.siteSearch(this.keyword).then(res => {
         this.pages = res.data || [];
         this.loading = false;

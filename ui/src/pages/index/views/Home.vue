@@ -7,7 +7,7 @@
           <span class="ml-1">知识库</span>
         </span>
         <span class="pull-right">
-          <a-button :icon="$store.getters.menuVisible ? 'menu-fold' : 'menu-unfold'" @click="toggleMenuVisible"></a-button>
+          <a-button :icon="$store.getters.menuVisible ? 'menu-fold' : 'menu-unfold'" :title="$store.getters.menuVisible ? '折叠' : '展开'" @click="toggleMenuVisible"></a-button>
           <a-input-search class="search-input ml-1" placeholder="输入关键字进行搜索" @search="search"></a-input-search>
           <a-dropdown>
             <a-menu slot="overlay" @click="handleCreate">
@@ -101,7 +101,7 @@
                 <span v-if="$store.getters.partId">
                   <a-button size="small" icon="sync" class="ml-1" title="刷新" @click="fetchPages($store.getters.partId)"></a-button>
                   <span class="pull-right" v-if="$store.getters.pageId">
-                    <a-button size="small" icon="form" class="mr-3" @click="toEditor"></a-button>
+                    <a-button size="small" icon="form" class="mr-3" title="撰写" @click="toEditor"></a-button>
                     <a-button size="small" icon="star" class="mr-1" :style="{color: $store.getters.pageStar ? '#fadb14' : ''}" title="设为/取消星标" @click="toggleStarPage"></a-button>
                     <a-button size="small" icon="edit" class="mr-1" title="编辑" @click="editPage"></a-button>
                     <a-popconfirm title="确定删除此页面吗？" placement="right" @confirm="handleDeletePage">
