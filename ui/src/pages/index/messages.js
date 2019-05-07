@@ -6,9 +6,9 @@ export default {
   },
   enums: {
     gender: {
-      0: {label: '保密', icon: 'question'},
-      1: {label: '男', icon: 'man'},
-      2: {label: '女', icon: 'woman'}
+      1: {label: '保密', icon: 'question'},
+      2: {label: '男', icon: 'man'},
+      3: {label: '女', icon: 'woman'}
     },
   }
 }

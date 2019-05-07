@@ -37,7 +37,7 @@
             </span>
           </a-col>
         </a-row>
-        <mavon-editor :value="viewedPage.content" :toolbars="toolbars" ref="editor" class="editor" @imgAdd="addImg"></mavon-editor>
+        <mavon-editor :value="viewedPage.content" :boxShadow="false" :toolbars="toolbars" ref="editor" class="editor" @imgAdd="addImg"></mavon-editor>
       </a-col>
     </a-row>
   </div>

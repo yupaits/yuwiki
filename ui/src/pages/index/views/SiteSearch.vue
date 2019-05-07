@@ -41,8 +41,8 @@
           </a-col>
           <a-col :span="1"></a-col>
           <a-col :span="15">
-            <div class="holder" v-if="viewedPage.ID">
-              <mavon-editor :value="this.viewedPage.content" :toolbars="toolbars" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
+            <div v-if="viewedPage.ID">
+              <mavon-editor :value="this.viewedPage.content" :boxShadow="false" :toolbars="toolbars" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
             </div>
           </a-col>
         </a-row>
@@ -162,10 +162,6 @@ export default {
 }
 .page-title {
   font-size: 18px;
-}
-.holder {
-  border: 1px solid #f5f5f5;
-  border-radius: 4px;
 }
 .page-preview {
   height: calc(100vh - 230px);

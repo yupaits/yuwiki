@@ -131,7 +131,7 @@
           </a-col>
           <a-col :span="$store.getters.menuVisible ? 10 : 17">
             <div class="holder preview-holder">
-              <mavon-editor :value="this.viewedPage.content" :toolbars="toolbars" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
+              <mavon-editor :value="this.viewedPage.content" :boxShadow="false" :toolbars="toolbars" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
             </div>
           </a-col>
         </a-row>
@@ -667,7 +667,7 @@ export default {
   color: #262626;
 }
 .preview-holder {
-  padding: 2px;
+  padding: 0;
 }
 .page-preview {
   z-index: 0;

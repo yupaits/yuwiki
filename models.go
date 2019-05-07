@@ -2,6 +2,7 @@ package yuwiki
 
 import (
 	"errors"
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 	"strings"
@@ -9,7 +10,7 @@ import (
 )
 
 const (
-	Secret = iota
+	Secret = iota + 1
 	Male
 	Female
 )
@@ -98,6 +99,13 @@ type PageVo struct {
 	Tags []string `json:"tags"`
 }
 
+type SharedUser struct {
+	UserId   uint   `json:"userId"`
+	Username string `json:"username"`
+	Nickname string `json:"nickname"`
+	Avatar   string `json:"avatar"`
+}
+
 type SharedBook struct {
 	gorm.Model
 	BookId uint `gorm:"not null;index" json:"bookId" binding:"required"`
@@ -151,6 +159,50 @@ func saveUser(user *User) bool {
 	return err == nil
 }
 
+func searchUsers(userSearch *UserSearch) *[]User {
+	users := &[]User{}
+	var query string
+	if userSearch.ID > 0 {
+		query = fmt.Sprintf("id = %d", userSearch.ID)
+	}
+	if userSearch.Gender > 0 {
+		genderQuery := fmt.Sprintf("gender = %d", userSearch.Gender)
+		if query == "" {
+			query = genderQuery
+		} else {
+			query = query + " AND " + genderQuery
+		}
+	}
+	if userSearch.NoSelf {
+		noSelfQuery := fmt.Sprintf("id != %d", getUserId())
+		if query == "" {
+			query = noSelfQuery
+		} else {
+			query = query + " AND " + noSelfQuery
+		}
+	}
+	if userSearch.Keyword != "" {
+		keyword := "'%" + userSearch.Keyword + "%'"
+		keywordQuery := fmt.Sprintf("username LIKE %s OR nickname LIKE %s OR phone LIKE %s OR email LIKE %s", keyword, keyword, keyword, keyword)
+		if query == "" {
+			query = keywordQuery
+		} else {
+			query = query + " AND (" + keywordQuery + ")"
+		}
+	}
+	if err := Db.Where(query).Find(users).Error; err != nil {
+		log.WithField("error", err).Error("查询用户失败")
+	}
+	var resUsers []User
+	for _, user := range *users {
+		user.InitPassword = ""
+		user.Password = ""
+		user.Salt = ""
+		resUsers = append(resUsers, user)
+	}
+	return &resUsers
+}
+
 func modifyPassword(modify *PasswordModify) (bool, string) {
 	user, _ := currentUser()
 	if modify.OldPassword == "" || modify.NewPassword == "" || modify.ConfirmPassword == "" {
@@ -165,7 +217,6 @@ func modifyPassword(modify *PasswordModify) (bool, string) {
 	if !Match(modify.OldPassword, user.Salt, user.Password) {
 		return false, "原密码不正确"
 	}
-
 	password, err := EncPassword(modify.NewPassword, user.Salt)
 	if err != nil {
 		return false, err.Error()
@@ -516,18 +567,45 @@ func getSharedBooks() *[]Book {
 		bookIds = append(bookIds, sharedBook.BookId)
 	}
 	books := &[]Book{}
-	Db.Where("book_id in (?)", bookIds).Find(books)
+	Db.Where("id in (?)", bookIds).Find(books)
 	return books
 }
 
 func saveSharedBook(sharedBook *SharedBook) bool {
 	var err error
-	if Db.NewRecord(sharedBook) {
+	dbSharedBook := &SharedBook{}
+	Db.Where("user_id = ? AND book_id = ?", sharedBook.UserId, sharedBook.BookId).Limit(1).Find(dbSharedBook)
+	if dbSharedBook.ID == 0 {
 		err = Db.Create(sharedBook).Error
-	} else {
-		err = Db.Save(sharedBook).Error
 	}
 	return err == nil
+}
+
+func deleteSharedBook(sharedBook *SharedBook) bool {
+	err := Db.Where("user_id = ? AND book_id = ?", sharedBook.UserId, sharedBook.BookId).Delete(SharedBook{}).Error
+	return err == nil
+}
+
+func getBookSharedUsers(bookId uint) *[]SharedUser {
+	sharedBooks := &[]SharedBook{}
+	Db.Where("book_id =?", bookId).Find(sharedBooks)
+	var userIds []uint
+	for _, sharedBook := range *sharedBooks {
+		userIds = append(userIds, sharedBook.UserId)
+	}
+	users := &[]User{}
+	Db.Where("id in (?)", userIds).Find(users)
+	var sharedUsers []SharedUser
+	for _, user := range *users {
+		sharedUser := SharedUser{
+			UserId:   user.ID,
+			Username: user.Username,
+			Nickname: user.Nickname,
+			Avatar:   user.Avatar,
+		}
+		sharedUsers = append(sharedUsers, sharedUser)
+	}
+	return &sharedUsers
 }
 
 func searchPagesByKeyword(keyword string) *[]PageVo {

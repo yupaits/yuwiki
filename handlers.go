@@ -43,6 +43,13 @@ type PageDto struct {
 	CreatedAt time.Time `json:"CreatedAt"`
 }
 
+type UserSearch struct {
+	ID      uint   `json:"id"`
+	Keyword string `json:"keyword"`
+	Gender  int8   `json:"gender"`
+	NoSelf  bool   `json:"noSelf"`
+}
+
 type PasswordModify struct {
 	OldPassword     string `json:"oldPassword" binding:"required"`
 	NewPassword     string `json:"newPassword" binding:"required"`
@@ -175,6 +182,25 @@ func shareBookHandler(c *gin.Context) {
 	}
 }
 
+func cancelShareBookHandler(c *gin.Context) {
+	sharedBook := &SharedBook{}
+	if err := c.ShouldBind(sharedBook); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if deleteSharedBook(sharedBook) {
+		Result(c, Ok())
+	} else {
+		Result(c, CodeFail(DeleteFail))
+	}
+}
+
+func getBookSharedUsersHandler(c *gin.Context) {
+	if bookId, err := strconv.ParseUint(c.Param("bookId"), 10, 32); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else {
+		Result(c, OkData(getBookSharedUsers(uint(bookId))))
+	}
+}
+
 func getPartPagesHandler(c *gin.Context) {
 	if partId, err := strconv.ParseUint(c.Param("partId"), 10, 32); err != nil {
 		Result(c, CodeFail(ParamsError))
@@ -303,6 +329,15 @@ func modifyPasswordHandler(c *gin.Context) {
 		Result(c, Ok())
 	} else {
 		Result(c, MsgFail(msg))
+	}
+}
+
+func searchUsersHandler(c *gin.Context) {
+	userSearch := &UserSearch{}
+	if err := c.ShouldBind(userSearch); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else {
+		Result(c, OkData(searchUsers(userSearch)))
 	}
 }
 

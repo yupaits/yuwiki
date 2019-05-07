@@ -99,6 +99,7 @@ func Run() {
 		books.PUT("/:bookId", saveBookHandler)
 		books.DELETE("/:bookId", deleteBookHandler)
 		books.POST("/share", shareBookHandler)
+		books.POST("/share/cancel", cancelShareBookHandler)
 		books.POST("/sort", sortBooksHandler)
 		books.PUT("/:bookId/star", toggleStarBookHandler)
 	}
@@ -136,6 +137,12 @@ func Run() {
 		user.GET("", getUserInfoHandler)
 		user.PUT("/edit", editUserHandler)
 		user.PUT("/modify-password", modifyPasswordHandler)
+	}
+
+	users := r.Group("/users")
+	{
+		users.POST("/search", searchUsersHandler)
+		users.GET("/shared/book/:bookId", getBookSharedUsersHandler)
 	}
 
 	r.GET("/shared/books", authorize, getSharedBooksHandler)

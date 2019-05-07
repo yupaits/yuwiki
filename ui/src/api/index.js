@@ -25,6 +25,9 @@ export default {
   getUserInfo() {
     return client.get('/user');
   },
+  searchUsers(search) {
+    return client.post('/users/search', search);
+  },
   updateUser(user) {
     return client.put(`/user/edit`, user);
   },
@@ -68,7 +71,13 @@ export default {
     return client.delete(`/pages/${pageId}`);
   },
   shareBook(bookShare) {
-    return client.post(`/books/share`, bookShare);
+    return client.post('/books/share', bookShare);
+  },
+  cancelShareBook(bookShare) {
+    return client.post('/books/share/cancel', bookShare);
+  },
+  getBookSharedUsers(bookId) {
+    return client.get(`/users/shared/book/${bookId}`);
   },
   modifyPassword(passwordModify) {
     return client.put('/user/modify-password', passwordModify);
