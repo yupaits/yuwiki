@@ -20,7 +20,7 @@ export default {
     return client.get(`/parts/${partId}/pages`);
   },
   getSharedBooks() {
-    return client.get('/books/shared');
+    return client.get('/shared/books');
   },
   getUserInfo() {
     return client.get('/user');
