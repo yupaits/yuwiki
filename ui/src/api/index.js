@@ -19,9 +19,6 @@ export default {
   getPages(partId) {
     return client.get(`/parts/${partId}/pages`);
   },
-  getSharedBooks() {
-    return client.get('/shared/books');
-  },
   getUserInfo() {
     return client.get('/user');
   },
@@ -102,6 +99,18 @@ export default {
   },
   toggleStarPage(pageId) {
     return client.put(`/pages/${pageId}/star`);
+  },
+  getSharedBooks() {
+    return client.get('/shared/books');
+  },
+  getSharedParts(bookId) {
+    return client.get(`/shared/books/${bookId}/parts`);
+  },
+  getSharedPages(bookId, partId) {
+    return client.get(`/shared/books/${bookId}/parts/${partId}/pages`);
+  },
+  getSharedPage(bookId, partId, pageId) {
+    return client.get(`/shared/books/${bookId}/parts/${partId}/pages/${pageId}`);
   },
   uploadFile(file) {
     let formdata = new FormData();

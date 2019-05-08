@@ -146,10 +146,6 @@ func getPartHandler(c *gin.Context) {
 	}
 }
 
-func getSharedBooksHandler(c *gin.Context) {
-	Result(c, OkData(getSharedBooks()))
-}
-
 func saveBookHandler(c *gin.Context) {
 	book := &Book{}
 	if err := c.ShouldBindJSON(book); err != nil {
@@ -416,5 +412,38 @@ func toggleStarPageHandler(c *gin.Context) {
 		Result(c, Ok())
 	} else {
 		Result(c, CodeFail(SaveFail))
+	}
+}
+
+func getSharedBooksHandler(c *gin.Context) {
+	Result(c, OkData(getSharedBooks()))
+}
+
+func getSharedPartsHandler(c *gin.Context) {
+	if bookId, err := strconv.ParseUint(c.Param("bookId"), 10, 32); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else {
+		Result(c, OkData(getSharedParts(uint(bookId))))
+	}
+}
+
+func getSharedPagesHandler(c *gin.Context) {
+	bookId, bookIdErr := strconv.ParseUint(c.Param("bookId"), 10, 32)
+	partId, partIdErr := strconv.ParseUint(c.Param("partId"), 10, 32)
+	if bookIdErr != nil || partIdErr != nil {
+		Result(c, CodeFail(ParamsError))
+	} else {
+		Result(c, OkData(getSharedPages(uint(bookId), uint(partId))))
+	}
+}
+
+func viewSharedPageHandler(c *gin.Context) {
+	bookId, bookIdErr := strconv.ParseUint(c.Param("bookId"), 10, 32)
+	partId, partIdErr := strconv.ParseUint(c.Param("partId"), 10, 32)
+	pageId, pageIdErr := strconv.ParseUint(c.Param("pageId"), 10, 32)
+	if bookIdErr != nil || partIdErr != nil || pageIdErr != nil {
+		Result(c, CodeFail(ParamsError))
+	} else {
+		Result(c, OkData(getSharedPage(uint(bookId), uint(partId), uint(pageId))))
 	}
 }

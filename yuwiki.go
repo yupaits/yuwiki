@@ -145,7 +145,14 @@ func Run() {
 		users.GET("/shared/book/:bookId", getBookSharedUsersHandler)
 	}
 
-	r.GET("/shared/books", authorize, getSharedBooksHandler)
+	shared := r.Group("/shared").Use(authorize)
+	{
+		shared.GET("/books", getSharedBooksHandler)
+		shared.GET("/books/:bookId/parts", getSharedPartsHandler)
+		shared.GET("/books/:bookId/parts/:partId/pages", getSharedPagesHandler)
+		shared.GET("/books/:bookId/parts/:partId/pages/:pageId", viewSharedPageHandler)
+	}
+
 	r.GET("/site/search", authorize, siteSearchHandler)
 
 	r.POST("/upload", authorize, uploadFileHandler)

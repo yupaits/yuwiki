@@ -559,18 +559,6 @@ func getHistoricalPages(pageId uint) *[]HistoricalPage {
 	return historicalPages
 }
 
-func getSharedBooks() *[]Book {
-	sharedBooks := &[]SharedBook{}
-	Db.Where("user_id = ?", getUserId()).Find(sharedBooks)
-	var bookIds []uint
-	for _, sharedBook := range *sharedBooks {
-		bookIds = append(bookIds, sharedBook.BookId)
-	}
-	books := &[]Book{}
-	Db.Where("id in (?)", bookIds).Find(books)
-	return books
-}
-
 func saveSharedBook(sharedBook *SharedBook) bool {
 	var err error
 	dbSharedBook := &SharedBook{}
@@ -709,4 +697,92 @@ func toggleStarPage(pageId uint) bool {
 		}
 		return true
 	}
+}
+
+func getSharedBooks() *[]Book {
+	sharedBooks := &[]SharedBook{}
+	Db.Where("user_id = ?", getUserId()).Find(sharedBooks)
+	var bookIds []uint
+	for _, sharedBook := range *sharedBooks {
+		bookIds = append(bookIds, sharedBook.BookId)
+	}
+	books := &[]Book{}
+	Db.Where("id in (?)", bookIds).Find(books)
+	return books
+}
+
+func getSharedParts(bookId uint) *[]TreePart {
+	var treeParts []TreePart
+	sharedBook := &SharedBook{}
+	Db.Where("book_id = ? AND user_id = ?", bookId, getUserId()).Find(sharedBook)
+	if sharedBook.ID != 0 {
+		parts := &[]Part{}
+		Db.Where("book_id = ?", bookId).Find(parts)
+		if err := Db.Where("book_id = ? AND parent_Id = 0", bookId).Order("sort_code").Find(parts).Error; err != nil {
+			log.WithFields(logrus.Fields{
+				"bookId": bookId,
+				"error":  err,
+			}).Error("获取笔记本分区清单失败")
+		}
+		for _, part := range *parts {
+			if part.Protected && part.Password != "" {
+				part.Password = ""
+			}
+			treePart := TreePart{
+				Part:     part,
+				SubParts: getSubParts(part.ID),
+			}
+			treeParts = append(treeParts, treePart)
+		}
+	}
+	return &treeParts
+}
+
+func getSharedPages(bookId, partId uint) *[]PageVo {
+	var pageVos []PageVo
+	sharedBook := &SharedBook{}
+	Db.Where("book_id = ? AND user_id = ?", bookId, getUserId()).Find(sharedBook)
+	if sharedBook.ID != 0 {
+		pages := &[]Page{}
+		if err := Db.Where("book_id = ? AND part_id = ?", bookId, partId).Order("sort_code").Find(pages).Error; err != nil {
+			log.WithFields(logrus.Fields{
+				"bookId": bookId,
+				"partId": partId,
+				"error":  err,
+			}).Error("获取分区页面清单失败")
+		}
+		for _, page := range *pages {
+			pageVo := PageVo{Page: page}
+			pageVo.Content = ""
+			setPageTags(&pageVo)
+			pageVos = append(pageVos, pageVo)
+		}
+	}
+	return &pageVos
+}
+
+func getSharedPage(bookId, partId, pageId uint) *PageVo {
+	var pageVo PageVo
+	sharedBook := &SharedBook{}
+	Db.Where("book_id = ? AND user_id = ?", bookId, getUserId()).Find(sharedBook)
+	if sharedBook.ID != 0 {
+		page := &Page{}
+		if err := Db.Where("id = ? AND book_id = ? AND part_id = ?", pageId, bookId, partId).Find(page).Error; err != nil {
+			log.WithFields(logrus.Fields{
+				"bookId": bookId,
+				"partId": partId,
+				"pageId": pageId,
+				"error":  err,
+			}).Error("获取页面失败")
+		}
+		pageVo = PageVo{Page: *page}
+		setPageTags(&pageVo)
+		//页面处于草稿状态时，返回最近发布的页面内容
+		if !page.Published {
+			historicalPage := &HistoricalPage{}
+			Db.Where("page_id = ?", page.ID).Order("created_at DESC").Limit(1).Find(historicalPage)
+			pageVo.Content = historicalPage.Content
+		}
+	}
+	return &pageVo
 }
