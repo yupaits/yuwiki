@@ -261,6 +261,8 @@ export default {
       this.fetchParts(this.$store.getters.bookId);
       this.fetchPages(this.$store.getters.partId);
       this.viewPage();
+    } else if (this.$store.getters.partId) {
+      this.fetchParts(this.$store.getters.bookId);
     }
   },
   methods: {
