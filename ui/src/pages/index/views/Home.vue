@@ -491,24 +491,28 @@ export default {
     dropBook() {
       const sortedBooks = this.sortedData(this.sort.book).map(data => {
         return {
-          bookId: data.id, 
+          bookId: data.id,
           sortCode: data.sortCode
         }
       });
       if (sortedBooks.length > 0) {
-        this.$api.sortBooks(sortedBooks);
+        this.$api.sortBooks(sortedBooks).then(() => {
+          this.fetchBooks();
+        });
       }
     },
     dropPart() {
       const sortPart = this.$store.getters.sortPart;
       const sortedParts = this.sortedData(sortPart).map(data => {
         return {
-          partId: data.id, 
+          partId: data.id,
           sortCode: data.sortCode
         }
       });
       if (sortedParts.length > 0) {
-        this.$api.sortParts(sortedParts);
+        this.$api.sortParts(sortedParts).then(() => {
+          this.fetchParts(this.$store.getters.bookId);
+        });
       }
     },
     movePage(event) {
@@ -521,12 +525,14 @@ export default {
     dropPage() {
       const sortedPages = this.sortedData(this.sort.page).map(data => {
         return {
-          pageId: data.id, 
+          pageId: data.id,
           sortCode: data.sortCode
         }
       });
       if (sortedPages.length > 0) {
-        this.$api.sortPages(sortedPages);
+        this.$api.sortPages(sortedPages).then(() => {
+          this.fetchPages(this.$store.getters.partId);
+        });
       }
     },
     sortedData(sortData) {
