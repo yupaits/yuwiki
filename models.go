@@ -91,7 +91,7 @@ type HistoricalPage struct {
 
 type TreePart struct {
 	Part
-	SubParts *[]TreePart
+	SubParts *[]TreePart `json:"subParts"`
 }
 
 type PageVo struct {

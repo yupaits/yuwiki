@@ -3,6 +3,7 @@ package yuwiki
 import (
 	"errors"
 	"fmt"
+	"github.com/dchest/captcha"
 	"github.com/gin-gonic/gin"
 	"regexp"
 	"strconv"
@@ -124,6 +125,14 @@ func signUpHandler(c *gin.Context) {
 	} else {
 		Result(c, Ok())
 	}
+}
+
+func getCaptchaHandler(c *gin.Context) {
+	captcha.New()
+}
+
+func reloadCaptchaHandler(c *gin.Context) {
+	//captcha.Reload()
 }
 
 func getBooksHandler(c *gin.Context) {

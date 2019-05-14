@@ -91,6 +91,9 @@ func Run() {
 		c.HTML(http.StatusOK, "index.html", gin.H{})
 	})
 
+	r.GET("/captcha", getCaptchaHandler)
+	r.GET("/reload-captcha", reloadCaptchaHandler)
+
 	books := r.Group("/books").Use(authorize)
 	{
 		books.GET("", getBooksHandler)
