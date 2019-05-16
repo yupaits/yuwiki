@@ -92,7 +92,8 @@ func Run() {
 	})
 
 	r.GET("/captcha", getCaptchaHandler)
-	r.GET("/reload-captcha", reloadCaptchaHandler)
+	r.GET("/captcha/show/:source", showCaptchaHandler)
+	r.GET("/captcha/verify", verifyCaptchaHandler)
 
 	books := r.Group("/books").Use(authorize)
 	{

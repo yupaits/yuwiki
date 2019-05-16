@@ -22,6 +22,11 @@ type SignUpForm struct {
 	ConfirmPassword string `json:"confirmPassword" binding:"required"`
 }
 
+type CaptchaResult struct {
+	CaptchaId  string `json:"captchaId"`
+	CaptchaUrl string `json:"captchaUrl"`
+}
+
 type UserProfile struct {
 	Avatar   string `json:"avatar"`
 	Nickname string `json:"nickname"`
@@ -128,11 +133,33 @@ func signUpHandler(c *gin.Context) {
 }
 
 func getCaptchaHandler(c *gin.Context) {
-	captcha.New()
+	if captchaId := captcha.New(); captchaId != "" {
+		captchaResult := &CaptchaResult{
+			CaptchaId:  captchaId,
+			CaptchaUrl: "/captcha/show/" + captchaId + ".png",
+		}
+		Result(c, OkData(captchaResult))
+	} else {
+		Result(c, CodeFail(FAIL))
+	}
 }
 
-func reloadCaptchaHandler(c *gin.Context) {
-	//captcha.Reload()
+func showCaptchaHandler(c *gin.Context) {
+	source := c.Param("source")
+	log.Debugf("获取验证码图片：%s", source)
+	ServeHTTP(c.Writer, c.Request)
+}
+
+func verifyCaptchaHandler(c *gin.Context) {
+	captchaId := c.Query("captchaId")
+	value := c.Query("value")
+	if captchaId == "" || value == "" {
+		Result(c, CodeFail(ParamsError))
+	} else if captcha.VerifyString(captchaId, value) {
+		Result(c, Ok())
+	} else {
+		Result(c, CodeFail(CaptchaVerifyFail))
+	}
 }
 
 func getBooksHandler(c *gin.Context) {

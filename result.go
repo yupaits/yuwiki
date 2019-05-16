@@ -6,35 +6,37 @@ import (
 )
 
 const (
-	FAIL             = 10000
-	LoginFail        = 10001
-	InvalidSession   = 10002
-	ParamsError      = 11001
-	DataNotFound     = 11002
-	DataCannotDelete = 11003
-	DataConflict     = 11004
-	CreateFail       = 20001
-	UpdateFail       = 20002
-	DeleteFail       = 20003
-	SaveFail         = 20004
-	SortFail         = 20005
-	FileUploadFail   = 30001
+	FAIL              = 10000
+	LoginFail         = 10001
+	InvalidSession    = 10002
+	ParamsError       = 11001
+	DataNotFound      = 11002
+	DataCannotDelete  = 11003
+	DataConflict      = 11004
+	CreateFail        = 20001
+	UpdateFail        = 20002
+	DeleteFail        = 20003
+	SaveFail          = 20004
+	SortFail          = 20005
+	FileUploadFail    = 30001
+	CaptchaVerifyFail = 30002
 )
 
 var messages = map[int]string{
-	FAIL:             "系统异常",
-	LoginFail:        "用户名或密码错误",
-	InvalidSession:   "无效的Session信息",
-	ParamsError:      "参数校验失败",
-	DataNotFound:     "查找的数据不存在或已被删除",
-	DataCannotDelete: "数据无法删除",
-	DataConflict:     "不允许的数据重复",
-	CreateFail:       "创建记录失败",
-	UpdateFail:       "更新记录失败",
-	DeleteFail:       "删除记录失败",
-	SaveFail:         "保存记录失败",
-	SortFail:         "排序操作失败",
-	FileUploadFail:   "文件上传失败",
+	FAIL:              "系统异常",
+	LoginFail:         "用户名或密码错误",
+	InvalidSession:    "无效的Session信息",
+	ParamsError:       "参数校验失败",
+	DataNotFound:      "查找的数据不存在或已被删除",
+	DataCannotDelete:  "数据无法删除",
+	DataConflict:      "不允许的数据重复",
+	CreateFail:        "创建记录失败",
+	UpdateFail:        "更新记录失败",
+	DeleteFail:        "删除记录失败",
+	SaveFail:          "保存记录失败",
+	SortFail:          "排序操作失败",
+	FileUploadFail:    "文件上传失败",
+	CaptchaVerifyFail: "验证码校验失败",
 }
 
 func Ok() gin.H {

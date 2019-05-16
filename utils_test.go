@@ -1,8 +1,8 @@
 package yuwiki
 
 import (
+	"github.com/dchest/captcha"
 	"github.com/matoous/go-nanoid"
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"strings"
@@ -45,4 +45,9 @@ func TestByteSize(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		log.Info(ByteSize(uint64(r.Int63n(10000000))))
 	}
+}
+
+func TestNewCaptcha(t *testing.T) {
+	captchaId := captcha.New()
+	assert.True(t, captchaId != "")
 }
