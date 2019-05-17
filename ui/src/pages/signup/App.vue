@@ -36,6 +36,20 @@
                 </span>
               </a-input>
             </a-form-item>
+            <a-row :gutter="8">
+              <a-col :span="14">
+                <a-form-item hasFeedback :validateStatus="validate.captcha.status" :help="validate.captcha.help">
+                  <a-input v-model="captchaCode" placeholder="请输入验证码" @keyup.enter="signup">
+                    <span slot="prefix">
+                      <a-icon type="safety"/>
+                    </span>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="10">
+                <img :src="captchaImageUrl" width="120" @click="handleReloadCaptcha">
+              </a-col>
+            </a-row>
             <a-form-item class="is-marginless">
               <a-button type="primary" block @click="singup">注册</a-button>
               <a href="/login">前往登录！</a>
@@ -49,6 +63,7 @@
 
 <script>
 const emailReg = /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$/;
+import dayjs from 'dayjs'
 export default {
   name: "App",
   data() {
@@ -59,6 +74,12 @@ export default {
         password: '',
         confirmPassword: ''
       },
+      captchaCode: '',
+      captchaId: '',
+      captchaUrl: '',
+      captchaFlag: '',
+      captchaImageUrl: undefined,
+      dayjs,
       validate: {
         username: {
           status: '',
@@ -75,15 +96,38 @@ export default {
         confirmPassword: {
           status: '',
           help: ''
+        },
+        captcha: {
+          status: '',
+          help: ''
         }
       }
     }
   },
+  created() {
+    this.fetchCaptcha();
+  },
   methods: {
+    fetchCaptcha() {
+      this.$api.getCaptcha().then(res => {
+        this.captchaId = res.data.captchaId;
+        this.captchaUrl = `${res.data.captchaUrl}?reload=true`;
+        this.captchaImageUrl = this.captchaUrl;
+      });
+    },
+    handleReloadCaptcha() {
+      this.captchaFlag = this.dayjs().format('YYYYMMDDHHmmssSSS');
+      this.captchaImageUrl = `${this.captchaUrl}&flag=${this.captchaFlag}`;
+    },
     singup() {
       if (this.validateForm()) {
-        this.$api.signup(this.signupForm).then(() => {
-          window.location.replace('/');
+        this.$api.verifyCaptcha(this.captchaId, this.captchaCode).then(() => {
+          this.validate.captcha = {status: 'success', help: ''};
+          this.$api.signup(this.signupForm).then(() => {
+            window.location.replace('/');
+          });
+        }).catch(res => {
+          this.validate.captcha = {status: 'error', help: res.data.msg};
         });
       }
     },
@@ -123,6 +167,15 @@ export default {
         this.validate.confirmPassword = {status: 'error', help: '两次输入的密码不一致！'};
       } else {
         this.validate.confirmPassword = {status: 'success', help: ''};
+      }
+      if (!this.captchaCode) {
+        this.validate.captcha = {status: 'error', help: '验证码不能为空！'};
+        return false;
+      } else if (this.captchaCode.length !== 6) {
+        this.validate.captcha = {status: 'error', help: '请填写6位数字的验证码！'};
+        return false;
+      } else {
+        this.validate.captcha = {status: 'success', help: ''};
       }
       return result;
     }

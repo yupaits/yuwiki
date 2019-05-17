@@ -153,7 +153,7 @@ func showCaptchaHandler(c *gin.Context) {
 func verifyCaptchaHandler(c *gin.Context) {
 	captchaId := c.Query("captchaId")
 	value := c.Query("value")
-	if captchaId == "" || value == "" {
+	if captchaId == "" || value == "" || len(value) != 6 {
 		Result(c, CodeFail(ParamsError))
 	} else if captcha.VerifyString(captchaId, value) {
 		Result(c, Ok())

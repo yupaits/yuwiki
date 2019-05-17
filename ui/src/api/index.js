@@ -7,6 +7,12 @@ export default {
   signup(signupForm) {
     return client.post('/signup', signupForm);
   },
+  getCaptcha() {
+    return client.get('/captcha');
+  },
+  verifyCaptcha(captchaId, value) {
+    return client.get(`/captcha/verify?captchaId=${captchaId}&value=${value}`);
+  },
   getBooks() {
     return client.get('/books');
   },

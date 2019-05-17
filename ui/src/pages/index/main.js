@@ -4,13 +4,13 @@ import router from './router'
 import store from './store'
 import api from '../../api'
 import messages from './messages'
-import styles from './styles'
+import styles from '../../styles'
 import Antd from 'ant-design-vue'
 import MavonEditor from 'mavon-editor'
 
 import 'ant-design-vue/dist/antd.min.css'
 import 'mavon-editor/dist/css/index.css'
-import './styles/index.css'
+import '../../styles/index.css'
 
 Vue.config.productionTip = false
 
