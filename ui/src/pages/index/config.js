@@ -32,7 +32,7 @@ export default {
       preview: true, // 预览
     }
   },
-  preivew: {
+  preview: {
     toolbars: {
       bold: false, // 粗体
       italic: false, // 斜体

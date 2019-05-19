@@ -23,6 +23,7 @@
           <a-dropdown placement="bottomRight">
             <a-menu slot="overlay" @click="handleUserOpt">
               <a-menu-item key="share-book"><a-icon type="share-alt"/>共享笔记本</a-menu-item>
+              <a-menu-item key="page-template" v-if="$store.getters.user.admin"><a-icon type="file-markdown"/>页面模板</a-menu-item>
               <a-menu-item key="profile"><a-icon type="setting"/>个人设置</a-menu-item>
               <a-menu-item key="modify-passwd"><a-icon type="key"/>修改密码</a-menu-item>
               <a-menu-item key="logout"><a-icon type="logout"/>注销登录</a-menu-item>
@@ -131,7 +132,7 @@
           </a-col>
           <a-col :span="$store.getters.menuVisible ? 10 : 17">
             <div class="holder preview-holder">
-              <mavon-editor :value="this.viewedPage.content" :boxShadow="false" :toolbars="toolbars" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
+              <mavon-editor :value="viewedPage.content" :boxShadow="false" :toolbars="toolbars" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
             </div>
           </a-col>
         </a-row>
@@ -224,7 +225,7 @@ export default {
         page: {}
       },
       dayjs,
-      toolbars: config.preivew.toolbars,
+      toolbars: config.preview.toolbars,
       sort: {
         book: {
           list: [],
@@ -316,6 +317,9 @@ export default {
       switch (key) {
         case 'share-book':
           this.$router.push('/book/share');
+          break;
+        case 'page-template':
+          this.$router.push('/templates');
           break;
         case 'profile':
           this.$router.push('/profile');

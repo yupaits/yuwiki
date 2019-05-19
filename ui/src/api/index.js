@@ -19,6 +19,12 @@ export default {
   getPages(partId) {
     return client.get(`/parts/${partId}/pages`);
   },
+  getTemplates() {
+    return client.get('/templates');
+  },
+  getTemplate(templateId) {
+    return client.get(`/templates/${templateId}`);
+  },
   getUserInfo() {
     return client.get('/user');
   },
@@ -46,6 +52,9 @@ export default {
   addPage(page) {
     return client.post('/pages', page);
   },
+  addTemplate(template) {
+    return client.post('/templates', template);
+  },
   editBook(book) {
     return client.put(`/books/${book.ID}`, book);
   },
@@ -58,6 +67,9 @@ export default {
   editPage(page) {
     return client.put(`/pages/${page.ID}/edit`, page);
   },
+  modifyTemplate(template) {
+    return client.put(`/templates/${template.ID}`, template);
+  },
   deleteBook(bookId) {
     return client.delete(`/books/${bookId}`);
   },
@@ -66,6 +78,9 @@ export default {
   },
   deletePage(pageId) {
     return client.delete(`/pages/${pageId}`);
+  },
+  deleteTemplate(templateId) {
+    return client.delete(`/templates/${templateId}`);
   },
   shareBook(bookShare) {
     return client.post('/books/share', bookShare);

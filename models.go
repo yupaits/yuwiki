@@ -99,6 +99,12 @@ type PageVo struct {
 	Tags []string `json:"tags"`
 }
 
+type PageTemplate struct {
+	gorm.Model
+	Name    string `gorm:"not null;unique" json:"name"`
+	Content string `gorm:"type:text" json:"content"`
+}
+
 type SharedUser struct {
 	UserId   uint   `json:"userId"`
 	Username string `json:"username"`
@@ -557,6 +563,45 @@ func getHistoricalPages(pageId uint) *[]HistoricalPage {
 		}).Error("获取页面历史记录失败")
 	}
 	return historicalPages
+}
+
+func getPageTemplates() *[]PageTemplate {
+	pageTemplates := &[]PageTemplate{}
+	if err := Db.Find(pageTemplates).Error; err != nil {
+		log.WithField("error", err).Error("获取页面模板清单失败")
+	}
+	var templates []PageTemplate
+	for _, template := range *pageTemplates {
+		template.Content = ""
+		templates = append(templates, template)
+	}
+	return &templates
+}
+
+func getPageTemplate(templateId uint) *PageTemplate {
+	pageTemplate := &PageTemplate{}
+	if err := Db.Where("id = ?", templateId).Find(pageTemplate).Error; err != nil {
+		log.WithFields(logrus.Fields{
+			"templateId": templateId,
+			"error":      err,
+		}).Error("获取页面模板失败")
+	}
+	return pageTemplate
+}
+
+func savePageTemplate(pageTemplate *PageTemplate) bool {
+	var err error
+	if Db.NewRecord(pageTemplate) {
+		err = Db.Create(pageTemplate).Error
+	} else {
+		err = Db.Save(pageTemplate).Error
+	}
+	return err == nil
+}
+
+func deletePageTemplate(id uint) bool {
+	err := Db.Where("id = ?", id).Delete(PageTemplate{}).Error
+	return err == nil
 }
 
 func saveSharedBook(sharedBook *SharedBook) bool {

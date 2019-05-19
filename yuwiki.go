@@ -32,6 +32,7 @@ func Run() {
 
 	gob.Register(User{})
 	authorize := newAuthMid()
+	admin := adminMid()
 
 	r.Static("/static", Config.Http.StaticPath)
 	r.StaticFile("/favicon.ico", Config.Http.Favicon)
@@ -134,6 +135,15 @@ func Run() {
 	tags := r.Group("/tags").Use(authorize)
 	{
 		tags.GET("", getTagsHandler)
+	}
+
+	templates := r.Group("/templates").Use(authorize, admin)
+	{
+		templates.GET("", getTemplatesHandler)
+		templates.GET("/:templateId", getTemplateHandler)
+		templates.POST("", saveTemplateHandler)
+		templates.PUT("/:templateId", saveTemplateHandler)
+		templates.DELETE("/:templateId", deleteTemplateHandler)
 	}
 
 	user := r.Group("/user").Use(authorize)

@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from './views/Home.vue'
+import Home from './views/Home'
+import PageTemplates from './views/PageTemplates'
 import Profile from './views/Profile'
 import PageEditor from './views/PageEditor'
 import SiteSearch from './views/SiteSearch'
@@ -15,6 +16,7 @@ Vue.use(Router)
 const router = new Router({
   routes: [
     {path: '/', component: Home},
+    {path: '/templates', component: PageTemplates},
     {path: '/profile', component: Profile},
     {path: '/page/edit', component: PageEditor},
     {path: '/search', component: SiteSearch},

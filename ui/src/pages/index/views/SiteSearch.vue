@@ -69,7 +69,7 @@ export default {
       pageId: undefined,
       viewedPage: {},
       dayjs,
-      toolbars: config.preivew.toolbars
+      toolbars: config.preview.toolbars
     }
   },
   created() {
