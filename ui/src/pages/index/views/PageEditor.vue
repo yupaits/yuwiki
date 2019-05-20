@@ -73,15 +73,13 @@ export default {
       return [];
     },
     templateMap() {
+      const map = {};
       if (this.templates && this.templates.length > 0) {
-        return this.templates.map(template => {
-          return {
-            id: template.ID,
-            content: template.content
-          };
+        this.templates.forEach(template => {
+          map[template.ID] = template.content;
         });
       }
-      return {};
+      return map;
     },
   },
   data() {
@@ -148,7 +146,7 @@ export default {
       }
     },
     useTemplate() {
-      this.viewedPage.content += this.templateMap[this.templateId].content;
+      this.$refs.editor.d_value += this.templateMap[this.templateId];
     },
     saveDraft() {
       this.savePage(false);
