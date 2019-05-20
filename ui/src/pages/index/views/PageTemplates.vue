@@ -72,7 +72,7 @@ export default {
   methods: {
     fetchTemplates() {
       this.loading = true;
-      this.$api.getTemplates().then(res => {
+      this.$api.getTemplates(false).then(res => {
         this.templates = res.data || [];
         this.loading = false;
       }).catch(() => {
@@ -110,6 +110,7 @@ export default {
       });
     },
     handleAddTemplate() {
+      this.template.content = this.$refs.editor.d_value;
       this.$api.addTemplate(this.template).then(() => {
         this.$message.success(this.$messages.result.createSuccess);
         this.modal.visible = false;

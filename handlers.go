@@ -325,7 +325,11 @@ func getTagsHandler(c *gin.Context) {
 }
 
 func getTemplatesHandler(c *gin.Context) {
-	Result(c, OkData(getPageTemplates()))
+	if withContent, err := strconv.ParseBool(c.DefaultQuery("withContent", "false")); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else {
+		Result(c, OkData(getPageTemplates(withContent)))
+	}
 }
 
 func getTemplateHandler(c *gin.Context) {

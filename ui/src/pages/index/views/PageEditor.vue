@@ -27,8 +27,14 @@
       </a-col>
       <a-col :span="20">
         <a-row class="editor-header">
-          <a-col :span="20">
+          <a-col :span="16">
             <h3 class="page-title">{{viewedPage.title}}</h3>
+          </a-col>
+          <a-col :span="4">
+            <a-select v-model="templateId" allowClear class="template-select" placeholder="请选择模板">
+              <a-select-option v-for="template in templates" :key="template.ID" :value="template.ID"><a-icon type="file-markdown"/> {{template.name}}</a-select-option>
+            </a-select>
+            <a-button icon="snippets" class="ml-2" title="使用模板" @click="useTemplate"></a-button>
           </a-col>
           <a-col :span="4">
             <span class="pull-right">
@@ -65,7 +71,18 @@ export default {
         return tags.map(tag => tag.name);
       }
       return [];
-    }
+    },
+    templateMap() {
+      if (this.templates && this.templates.length > 0) {
+        return this.templates.map(template => {
+          return {
+            id: template.ID,
+            content: template.content
+          };
+        });
+      }
+      return {};
+    },
   },
   data() {
     return {
@@ -75,12 +92,15 @@ export default {
       historyLoading: false,
       historicalPages: [],
       noHistory: false,
-      historyId: undefined
+      historyId: undefined,
+      templates: [],
+      templateId: undefined,
     }
   },
   created() {
     this.fetchHistoricalPages();
     this.fetchTags();
+    this.fetchTemplates();
   },
   methods: {
     fetchTags() {
@@ -108,6 +128,11 @@ export default {
         this.$router.push('/');
       }
     },
+    fetchTemplates() {
+      this.$api.getTemplates(true).then(res => {
+        this.templates = res.data || [];
+      });
+    },
     addImg(pos, file) {
       this.$api.uploadFile(file).then(res => {
         this.$refs.editor.$img2Url(pos, res.data);
@@ -121,6 +146,9 @@ export default {
         this.$refs.editor.d_value = page.content;
         this.historyId = page.ID;
       }
+    },
+    useTemplate() {
+      this.viewedPage.content += this.templateMap[this.templateId].content;
     },
     saveDraft() {
       this.savePage(false);
@@ -169,5 +197,8 @@ export default {
   background: #91d5ff;
   font-weight: bold;
   color: #262626;
+}
+.template-select {
+  width: 160px;
 }
 </style>

@@ -25,8 +25,8 @@ export default {
   getPages(partId) {
     return client.get(`/parts/${partId}/pages`);
   },
-  getTemplates() {
-    return client.get('/templates');
+  getTemplates(withContent) {
+    return client.get(`/templates?withContent=${withContent}`);
   },
   getTemplate(templateId) {
     return client.get(`/templates/${templateId}`);

@@ -565,10 +565,13 @@ func getHistoricalPages(pageId uint) *[]HistoricalPage {
 	return historicalPages
 }
 
-func getPageTemplates() *[]PageTemplate {
+func getPageTemplates(withContent bool) *[]PageTemplate {
 	pageTemplates := &[]PageTemplate{}
 	if err := Db.Find(pageTemplates).Error; err != nil {
 		log.WithField("error", err).Error("获取页面模板清单失败")
+	}
+	if withContent {
+		return pageTemplates
 	}
 	var templates []PageTemplate
 	for _, template := range *pageTemplates {
