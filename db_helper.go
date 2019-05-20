@@ -45,6 +45,7 @@ func InitDb() {
 	historicalPage := &HistoricalPage{}
 	tag := &Tag{}
 	pageTag := &PageTag{}
+	pageTemplate := &PageTemplate{}
 	sharedBook := &SharedBook{}
 	uploadFile := &UploadFile{}
 	if Config.DataSource.DdlUpdate {
@@ -83,6 +84,11 @@ func InitDb() {
 		} else {
 			Db.CreateTable(pageTag)
 		}
+		if Db.HasTable(pageTemplate) {
+			Db.AutoMigrate(pageTemplate)
+		} else {
+			Db.CreateTable(pageTemplate)
+		}
 		if Db.HasTable(sharedBook) {
 			Db.AutoMigrate(sharedBook)
 		} else {
@@ -94,7 +100,7 @@ func InitDb() {
 			Db.CreateTable(uploadFile)
 		}
 	} else {
-		Db.DropTableIfExists(user, book, part, page, historicalPage, tag, pageTag, sharedBook, uploadFile)
-		Db.CreateTable(user, book, part, page, historicalPage, tag, pageTag, sharedBook, uploadFile)
+		Db.DropTableIfExists(user, book, part, page, historicalPage, tag, pageTag, pageTemplate, sharedBook, uploadFile)
+		Db.CreateTable(user, book, part, page, historicalPage, tag, pageTag, pageTemplate, sharedBook, uploadFile)
 	}
 }

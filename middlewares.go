@@ -32,6 +32,18 @@ func newAuthMid() gin.HandlerFunc {
 	}
 }
 
+func adminMid() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if user, err := getCurrentUser(); err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, MsgFail(err.Error()))
+		} else if user.Admin {
+			c.Next()
+		} else {
+			c.AbortWithStatusJSON(http.StatusForbidden, CodeFail(http.StatusForbidden))
+		}
+	}
+}
+
 func logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Start timer

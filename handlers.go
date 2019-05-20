@@ -324,6 +324,39 @@ func getTagsHandler(c *gin.Context) {
 	Result(c, OkData(getTags()))
 }
 
+func getTemplatesHandler(c *gin.Context) {
+	Result(c, OkData(getPageTemplates()))
+}
+
+func getTemplateHandler(c *gin.Context) {
+	if templateId, err := strconv.ParseUint(c.Param("templateId"), 10, 32); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else {
+		Result(c, OkData(getPageTemplate(uint(templateId))))
+	}
+}
+
+func saveTemplateHandler(c *gin.Context) {
+	template := &PageTemplate{}
+	if err := c.ShouldBindJSON(template); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if savePageTemplate(template) {
+		Result(c, Ok())
+	} else {
+		Result(c, CodeFail(SaveFail))
+	}
+}
+
+func deleteTemplateHandler(c *gin.Context) {
+	if templateId, err := strconv.ParseUint(c.Param("templateId"), 10, 32); err != nil {
+		Result(c, CodeFail(ParamsError))
+	} else if deletePageTemplate(uint(templateId)) {
+		Result(c, Ok())
+	} else {
+		Result(c, CodeFail(DeleteFail))
+	}
+}
+
 func getUserInfoHandler(c *gin.Context) {
 	if user, err := getCurrentUser(); err != nil {
 		Result(c, MsgFail(err.Error()))
