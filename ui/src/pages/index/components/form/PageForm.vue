@@ -69,7 +69,7 @@ export default {
             children: [],
             disabled: part.partType === 1
           }
-          this.toTreeData(node.children, node.label, part.SubParts);
+          this.toTreeData(node.children, node.label, part.subParts);
           treeData.push(node);
         });
       }
