@@ -32,7 +32,7 @@
         </div>
       </a-col>
       <a-col :span="18">
-        <mavon-editor :value="this.viewedPage.content" :boxShadow="false" :toolbars="toolbars" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
+        <mavon-editor :value="viewedPage.content" :boxShadow="false" :toolbars="toolbars" :editable="false" defaultOpen="preview" :subfield="false" class="page-preview"></mavon-editor>
       </a-col>
     </a-row>
   </div>
@@ -51,7 +51,7 @@ export default {
       partId: undefined,
       pageId: undefined,
       viewedPage: {},
-      toolbars: config.preivew.toolbars
+      toolbars: config.preview.toolbars
     }
   },
   created() {
