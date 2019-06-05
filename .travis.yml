@@ -10,7 +10,7 @@ node_js:
 env:
   - GO111MODULE=on
 
-install:
+script:
   - go build app/main.go
   - cd ui
   - npm install
