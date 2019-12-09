@@ -1,6 +1,6 @@
 module github.com/yupaits/yuwiki
 
-go 1.12
+go 1.13
 
 require (
 	github.com/BurntSushi/toml v0.3.1
@@ -31,10 +31,11 @@ require (
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/robfig/cron v1.1.0
 	github.com/sirupsen/logrus v1.4.1
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.4.0
 	github.com/tebeka/strftime v0.0.0-20140926081919-3f9c7761e312 // indirect
 	github.com/ugorji/go/codec v0.0.0-20190320090025-2dc34c0b8780 // indirect
-	golang.org/x/crypto v0.0.0-00010101000000-000000000000
+	golang.org/x/crypto v0.0.0-20190510104115-cbcb75029529
+	golang.org/x/tools v0.0.0-20191206204035-259af5ff87bd // indirect
 )
 
 replace (
